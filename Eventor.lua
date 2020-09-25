@@ -39,14 +39,6 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 		d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate])
 	end
 end
---[[
-IsCollectibleUnlocked(number collectibleId)
-Returns: boolean isUnlocked
-
-UseCollectible(number collectibleId)
-
-136348 = ani buffi abilityId
-]]
 
 -- Here the magic starts
 local loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
