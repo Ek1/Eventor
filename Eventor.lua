@@ -29,14 +29,19 @@ end
 function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, lootType, lootedByPlayer, isPickpocketLoot, questItemIcon, itemId)
 
 	if lootedByPlayer and EVENTLOOT[itemId] then
-		if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
-			d( ADDON .. ": accountEventLootHistory[itemId]" )
-			accountEventLootHistory[itemId] = {	-- if not, create one
-				todaysDate = 0
-			}
+		if not accountEventLootHistory[itemId].todaysDate then	-- Does itemId loot have a table
+
+			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
+				d( ADDON .. ": creating table for " .. itemLink)
+				accountEventLootHistory[itemId] = {}	-- if not, create one
+			end
+
+			d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
+			accountEventLootHistory[itemId].todaysDate = 0	-- if not, create one
 		end
+
 		accountEventLootHistory[itemId].todaysDate = accountEventLootHistory[itemId].todaysDate + 1
-		d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate])
+		d( ADDON .. ": " .. (zo_strformat("<<i:1>>.", accountEventLootHistory[itemId].todaysDate)) .. itemLink )
 	end
 end
 
