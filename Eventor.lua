@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on.",
-	VERSION = "32.20200926",
+	VERSION = "32.202009261",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -29,15 +29,15 @@ end
 function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, lootType, lootedByPlayer, isPickpocketLoot, questItemIcon, itemId)
 
 	if lootedByPlayer and EVENTLOOT[itemId] then
-		if not accountEventLootHistory[itemId].todaysDate then	-- Does itemId loot have a table
 
-			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
-				d( ADDON .. ": creating table for " .. itemLink)
-				accountEventLootHistory[itemId] = {}	-- if not, create one
-			end
+		if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
+			accountEventLootHistory[itemId] = {}	-- if not, create one
+			d( ADDON .. ": creating table for " .. itemLink)
+		end
 
-			d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
+		if not accountEventLootHistory[itemId].todaysDate then	-- Is this itemId's first entry for this date?
 			accountEventLootHistory[itemId].todaysDate = 0	-- if not, create one
+			d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
 		end
 
 		accountEventLootHistory[itemId].todaysDate = accountEventLootHistory[itemId].todaysDate + 1
