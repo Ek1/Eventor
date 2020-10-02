@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on.",
-	VERSION = "32.202009261",
+	VERSION = "32.20201002",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -12,7 +12,7 @@ local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview fri
 accountEventLootHistory = {}
 accountEventLootHistory[0] = 0
 
-todaysDate = os.date("%Y%m%d")
+todaysDate = os.date("%Y-%m-%d")
 
 EVENTLOOT = {
     [167226] = 1,	-- Lost treasures of Skyrim, grindable
@@ -35,13 +35,13 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 			d( ADDON .. ": creating table for " .. itemLink)
 		end
 
-		if not accountEventLootHistory[itemId].todaysDate then	-- Is this itemId's first entry for this date?
-			accountEventLootHistory[itemId].todaysDate = 0	-- if not, create one
+		if not accountEventLootHistory[itemId][todaysDate] then	-- Is this itemId's first entry for this date?
+			accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
 			d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
 		end
 
-		accountEventLootHistory[itemId].todaysDate = accountEventLootHistory[itemId].todaysDate + 1
-		d( ADDON .. ": " .. (zo_strformat("<<i:1>>.", accountEventLootHistory[itemId].todaysDate)) .. itemLink )
+		accountEventLootHistory[itemId][todaysDate] = accountEventLootHistory[itemId][todaysDate] + 1
+		d( ADDON .. ": " .. (zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate])) .. " ".. itemLink )
 	end
 end
 
