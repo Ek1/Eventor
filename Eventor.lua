@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.202010223",
+	VERSION = "32.202010224",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -107,19 +107,19 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 
 			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
 				accountEventLootHistory[itemId] = {}	-- if not, create one
-				accountEventLootHistory[itemId].year = 0	-- Keeps track how many boxes in total this year
+				accountEventLootHistory[itemId][todaysYear] = 0	-- Keeps track how many boxes in total this year of the itemId 
 				d( ADDON .. ": creating table for " .. itemLink)
 			end
 
-			if not accountEventLootHistory[itemId].todaysDate then	-- Is this itemId's first entry for this date?
-				accountEventLootHistory[itemId].todaysDate = 0	-- if not, create one
+			if not accountEventLootHistory[itemId][todaysDate] then	-- Is this itemId's first entry for this date?
+				accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
 				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
 			end
 
-			accountEventLootHistory[itemId].todaysDate = accountEventLootHistory[itemId].todaysDate + 1	-- increase todays counter by one
-			accountEventLootHistory[itemId].todaysYear = accountEventLootHistory[itemId].todaysYear + 1	-- increase this years loot counter by one
+			accountEventLootHistory[itemId][todaysDate] = accountEventLootHistory[itemId][todaysDate] + 1	-- increase todays counter by one
+			accountEventLootHistory[itemId][todaysYear] = accountEventLootHistory[itemId][todaysYear] + 1	-- increase this years loot counter by one
 
-			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId].todaysDate) .. " ".. itemLink .. " " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId].todaysYear) )
+			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemLink .. " " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) )
 		end
 
 	end
