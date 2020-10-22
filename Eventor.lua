@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.202010224",
+	VERSION = "32.20201023",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -21,11 +21,10 @@ local Eventor_settings = {	-- default settings
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
 
-local todaysDate	= os.date("%Y%m%d")
-local todaysYear	= os.date("%Y")
+local todaysDate = tonumber(os.date("%Y%m%d"))
+local todaysYear = tonumber(os.date("%Y"))
 
 local EVENTLOOT = {
-
 	-- Undaunted Celebration
 	[156679] = 2,	-- Undaunted Reward Box
 	[156717] = 1,	-- Hefty Undaunted Reward Box
@@ -38,11 +37,11 @@ local EVENTLOOT = {
 	-- Thieves Guild and Dark Brotherhood Celebration
 
 	-- Jester's Festival
-	[147637] = 2,	-- Stupendous Jester's Festival Box
-	[147637] = 1,	-- Jester's Festival Box
+--	[] = 2,	-- Stupendous Jester's Festival Box
+--	[] = 1,	-- Jester's Festival Box
 
 	-- Anniversary Jubilee
-	[147637] = 2,	-- Anniversary Jubilee Gift Box
+--	[] = 2,	-- Anniversary Jubilee Gift Box
 
 	-- Vampire Week
 
@@ -69,7 +68,7 @@ local EVENTLOOT = {
 	[167227] = 2,	-- Bulging Box of Gray Host Pillage
 	
 	-- New Life Festival
-	[141823] = 2	-- New Life Festival Box
+	[141823] = 2,	-- New Life Festival Box
 }
 
 -- Lets fire up the add-on by registering for events and loading variables
@@ -95,7 +94,9 @@ end
 
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
-function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, lootType, lootedByPlayer, isPickpocketLoot, questItemIcon, itemId)
+function Eventor.lootedEventBox(_, _, _, _, _, _, lootedByPlayer, _, _, itemId, _)
+
+	itemId = tonumber(itemId)
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
@@ -103,31 +104,30 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 		
-			todaysDate = os.date("%Y%m%d")	-- maybe its a new day already, better refresh the variable
+			todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
+			todaysYear = tonumber(os.date("%Y"))
 
 			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
 				accountEventLootHistory[itemId] = {}	-- if not, create one
 				accountEventLootHistory[itemId][todaysYear] = 0	-- Keeps track how many boxes in total this year of the itemId 
 				d( ADDON .. ": creating table for " .. itemLink)
 			end
+			accountEventLootHistory[itemId][todaysYear] = (accountEventLootHistory[itemId][todaysYear] or 0) + 1	-- increase this years loot counter by one
 
 			if not accountEventLootHistory[itemId][todaysDate] then	-- Is this itemId's first entry for this date?
 				accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
 				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
 			end
+			accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
 
-			accountEventLootHistory[itemId][todaysDate] = accountEventLootHistory[itemId][todaysDate] + 1	-- increase todays counter by one
-			accountEventLootHistory[itemId][todaysYear] = accountEventLootHistory[itemId][todaysYear] + 1	-- increase this years loot counter by one
-
-			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemLink .. " " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) )
+			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemLink .. " today and " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 		end
-
 	end
 end
 
 -- Listens if the ticket currency changes for loot reasons.
 -- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
-function Eventor.EVENT_CURRENCY_UPDATE (eventCode, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
+function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == 0 or CurrencyChangeReason == 4) then
@@ -135,6 +135,10 @@ function Eventor.EVENT_CURRENCY_UPDATE (eventCode, currencyType, currencyLocatio
 
 		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
 	end
+end
+
+function Eventor.TEST()
+--	Eventor.lootedEventBox (_, _, _, _, _, _, true, _, _, 167239)
 end
 
 -- Here the magic starts
