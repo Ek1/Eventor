@@ -14,9 +14,9 @@ accountEventLootHistory[0] = 0
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local Eventor_settings = {	-- default settings
-	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
-	AlarmAnnoyance	= 12,	-- How many times user is reminded
-	LongestEvent	= 35	-- Longest known event this far in days
+	"TicketThresholdAlarm" =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
+	"AlarmAnnoyance"	= 12,	-- How many times user is reminded
+	"LongestEvent"	= 35	-- Longest known event this far in days
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
@@ -94,7 +94,7 @@ end
 
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
-function Eventor.lootedEventBox(_, _, _, _, _, _, lootedByPlayer, _, _, itemId, _)
+function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, itemId, _)
 
 	itemId = tonumber(itemId)
 
@@ -110,17 +110,17 @@ function Eventor.lootedEventBox(_, _, _, _, _, _, lootedByPlayer, _, _, itemId, 
 			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
 				accountEventLootHistory[itemId] = {}	-- if not, create one
 				accountEventLootHistory[itemId][todaysYear] = 0	-- Keeps track how many boxes in total this year of the itemId 
-				d( ADDON .. ": creating table for " .. itemLink)
+				d( ADDON .. ": creating table for " .. itemName)
 			end
 			accountEventLootHistory[itemId][todaysYear] = (accountEventLootHistory[itemId][todaysYear] or 0) + 1	-- increase this years loot counter by one
 
 			if not accountEventLootHistory[itemId][todaysDate] then	-- Is this itemId's first entry for this date?
 				accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
-				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemLink .. " table")
+				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemName .. " table")
 			end
 			accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
 
-			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemLink .. " today and " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 		end
 	end
 end
