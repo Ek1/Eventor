@@ -1,10 +1,10 @@
 ## Title: Eventor
 ## APIVersion: 100032 100033
 ## IsLibrary: false
-## Version: 32.20201002
-## Description: One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how much and when.
+## Version: 32.20201022
+## Description: One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Also warns if you can't fit any more tickets.
 ## Author: Ek1
 ## License: BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License
-## SavedVariables: Eventor_accountEventLootHistory
+## SavedVariables: Eventor_accountEventLootHistory Eventor_settings
  
 Eventor.lua
