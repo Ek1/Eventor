@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.202010221",
+	VERSION = "32.202010223",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -19,7 +19,7 @@ local Eventor_settings = {	-- default settings
 	LongestEvent	= 35	-- Longest known event this far in days
 }
 
-local AlarmsRemaining = Eventor_settings[AlarmAnnoyance]
+local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
 
 local todaysDate	= os.date("%Y%m%d")
 local todaysYear	= os.date("%Y")
@@ -56,13 +56,13 @@ local EVENTLOOT = {
 
 	-- Witches Festival
 	[167234] = 2,	-- Plunder Skull
-	[141771] = 1,	-- Dremora Plunder Skull, Arena
-	[141772] = 1,	-- Dremora Plunder Skull, Insurgent
-	[141773] = 1,	-- Dremora Plunder Skull, Delve
-	[141774] = 1,	-- Dremora Plunder Skull, Dungeon
-	[141775] = 1,	-- Dremora Plunder Skull, Public & Sweeper
-	[141776] = 1,	-- Dremora Plunder Skull, Trial
-	[141777] = 1,	-- Dremora Plunder Skull, World
+	[167235] = 1,	-- Dremora Plunder Skull, Arena
+	[167236] = 1,	-- Dremora Plunder Skull, Insurgent
+	[167237] = 1,	-- Dremora Plunder Skull, Delve
+	[167238] = 1,	-- Dremora Plunder Skull, Dungeon
+	[167239] = 1,	-- Dremora Plunder Skull, Public & Sweeper
+	[167240] = 1,	-- Dremora Plunder Skull, Trial
+	[167241] = 1,	-- Dremora Plunder Skull, World
 	
 	-- Lost treasures of Skyrim
     [167226] = 1,	-- Box of Gray Host Pillage
@@ -79,13 +79,27 @@ function Eventor.Initialize(loadOrder)
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
 end
 
+local function ticketAlert()
+
+	if 0 < AlarmsRemaining and DoesCurrencyAmountMeetConfirmationThreshold(CURT_EVENT_TICKETS, Eventor_settings[TicketThresholdAlarm])	then	-- 
+		d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
+
+		local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
+		messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
+		messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
+		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
+
+		AlarmsRemaining = AlarmsRemaining - 1
+	end
+end
+
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
 function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, lootType, lootedByPlayer, isPickpocketLoot, questItemIcon, itemId)
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
-		Eventor.ticketAlert()
+--		ticketAlert()
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 		
@@ -111,27 +125,13 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 	end
 end
 
-local function ticketAlert()
-
-	if 0 < AlarmsRemaining and DoesCurrencyAmountMeetConfirmationThreshold(CURT_EVENT_TICKETS, Eventor_settings[TicketThresholdAlarm])	then	-- 
-		d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
-
-		local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
-		messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
-		messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
-		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
-
-		AlarmsRemaining = AlarmsRemaining - 1
-	end
-end
-
 -- Listens if the ticket currency changes for loot reasons.
 -- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
 function Eventor.EVENT_CURRENCY_UPDATE (eventCode, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == 0 or CurrencyChangeReason == 4) then
-		ticketAlert()
+--		ticketAlert()
 
 		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
 	end
