@@ -1,8 +1,8 @@
 Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
-	DESCRIPTION = "One stop event add-on. Keeps track of the ammount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.20201022",
+	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
+	VERSION = "32.202010221",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -55,7 +55,7 @@ local EVENTLOOT = {
 	-- Imperial City Celebration
 
 	-- Witches Festival
-	[84521] = 2,	-- Plunder Skull
+	[167234] = 2,	-- Plunder Skull
 	[141771] = 1,	-- Dremora Plunder Skull, Arena
 	[141772] = 1,	-- Dremora Plunder Skull, Insurgent
 	[141773] = 1,	-- Dremora Plunder Skull, Delve
@@ -111,18 +111,6 @@ function Eventor.lootedEventBox(eventCode, name, itemLink, quantity, itemSound, 
 	end
 end
 
--- Listens if the ticket currency changes for loot reasons.
--- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
-function Eventor.EVENT_CURRENCY_UPDATE (eventCode, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
-
-	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
-	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == 0 or CurrencyChangeReason == 4) then
-		ticketAlert()
-
-		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
-	end
-end
-
 local function ticketAlert()
 
 	if 0 < AlarmsRemaining and DoesCurrencyAmountMeetConfirmationThreshold(CURT_EVENT_TICKETS, Eventor_settings[TicketThresholdAlarm])	then	-- 
@@ -134,6 +122,18 @@ local function ticketAlert()
 		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
 
 		AlarmsRemaining = AlarmsRemaining - 1
+	end
+end
+
+-- Listens if the ticket currency changes for loot reasons.
+-- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
+function Eventor.EVENT_CURRENCY_UPDATE (eventCode, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
+
+	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
+	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == 0 or CurrencyChangeReason == 4) then
+		ticketAlert()
+
+		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
 	end
 end
 
