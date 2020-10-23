@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.202010233",
+	VERSION = "32.202010234",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -135,6 +135,10 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 --		ticketAlert()
 
 		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
+
+		if not accountEventLootHistory[CURT_EVENT_TICKETS] then
+			accountEventLootHistory[CURT_EVENT_TICKETS] = {}
+		end
 
 		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
 	end
