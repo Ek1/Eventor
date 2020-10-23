@@ -14,9 +14,9 @@ accountEventLootHistory[0] = 0
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local Eventor_settings = {	-- default settings
-	"TicketThresholdAlarm" =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
-	"AlarmAnnoyance"	= 12,	-- How many times user is reminded
-	"LongestEvent"	= 35	-- Longest known event this far in days
+	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
+	AlarmAnnoyance	= 12,	-- How many times user is reminded
+	LongestEvent	= 35	-- Longest known event this far in days
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
