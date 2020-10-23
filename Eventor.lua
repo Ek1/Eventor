@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.20201023",
+	VERSION = "32.202010232",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
