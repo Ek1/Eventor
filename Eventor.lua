@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.202010234",
+	VERSION = "32.20201026"
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -10,7 +10,6 @@ Eventor = {
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 
 accountEventLootHistory = {}
-accountEventLootHistory[0] = 0
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local Eventor_settings = {	-- default settings
@@ -118,9 +117,14 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 				accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
 				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemName .. " table")
 			end
-			accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
 
-			d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+			if EVENTLOOT[itemId] == 1 then	-- The item has drop rate of once per day so instead of increasing the date time store the time stamp
+				accountEventLootHistory[itemId][todaysDate] = os.time()	-- timestamp to store.
+				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%Y%m%d %H:%m:%s") )
+			else 
+				accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
+				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+			end
 		end
 	end
 end
@@ -145,6 +149,7 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 end
 
 function Eventor.TEST()
+	ticketAlert()
 --	Eventor.lootedEventBox (_, _, _, _, _, _, true, _, _, 167239)
 end
 
