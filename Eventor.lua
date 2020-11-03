@@ -2,12 +2,13 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "32.20201028",
+	VERSION = "33.201103",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
+local Eventor_loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
 
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
@@ -15,7 +16,7 @@ accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
 	AlarmAnnoyance	= 12,	-- How many times user is reminded
-	LongestEvent	= 35	-- Longest known event this far in days
+	LongestEvent	= 35,	-- Longest known event this far in days
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
@@ -70,22 +71,9 @@ local EVENTLOOT = {
 	[141823] = 2,	-- New Life Festival Box
 }
 
--- Lets fire up the add-on by registering for events and loading variables
-function Eventor.Initialize(loadOrder)
-	d( Eventor.TITLE .. ": load order " ..  loadOrder .. ", starting initalization")
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
-end
+
 
 local function ticketAlert()
-
-
-	d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
-
-	local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
-	messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
-	messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
-	CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
 
 	AlarmsRemaining = AlarmsRemaining - 1
 
@@ -109,7 +97,7 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
---		ticketAlert()
+		ticketAlert()
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 		
@@ -133,6 +121,7 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%H:%M:%S") .. " and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			else
 				accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
+				accountEventLootHistory[itemId][0] = os.time()	-- when the latest one was picked up
 				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			end
 		end
@@ -146,7 +135,7 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
 		and oldAmount < newAmount then
---		ticketAlert()
+		ticketAlert()
 
 		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
 
@@ -160,23 +149,40 @@ end
 
 function Eventor.TEST()
 	ticketAlert()
---	Eventor.lootedEventBox (_, _, _, _, _, _, true, _, _, 167239)
+end
+
+function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
+
+	Eventor.GiveThatSweetExpBoost()
+
+end
+
+-- Refreshes the characters exp buff
+function Eventor.GiveThatSweetExpBoost (eventId)
+	UseCollectible(479)
+end
+
+-- Lets fire up the add-on by registering for events and loading variables
+function Eventor.Initialize(loadOrder)
+	d( Eventor.TITLE .. ": load order fgdfg starting initalization")
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED )
+
+    accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)
+    Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)
 end
 
 -- Here the magic starts
-local loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
 function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
   if loadedAddOnName == ADDON then
 
 	--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
 	EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
 
-    accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)
-    Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)
-
-	Eventor.Initialize(loadOrder)
+	Eventor.Initialize(Eventor_loadOrder)
   else
-	loadOrder = loadOrder + 1
+	Eventor_loadOrder = Eventor_loadOrder + 1
   end
 end
 -- Registering for the add on loading loop
