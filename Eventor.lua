@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "33.201103",
+	VERSION = "33.201203",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -28,6 +28,8 @@ local EVENTLOOT = {
 	-- Undaunted Celebration
 	[156679] = 2,	-- Undaunted Reward Box
 	[156717] = 1,	-- Hefty Undaunted Reward Box
+	[171267] = 2,	-- Undaunted Reward Box
+	[171268] = 2, -- Glorious Undaunted Reward Box
 
 	-- Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
@@ -64,13 +66,12 @@ local EVENTLOOT = {
 	[167241] = 1,	-- Dremora Plunder Skull, World
 	
 	-- Lost treasures of Skyrim
-    [167226] = 1,	-- Box of Gray Host Pillage
+  [167226] = 1,	-- Box of Gray Host Pillage
 	[167227] = 2,	-- Bulging Box of Gray Host Pillage
 	
 	-- New Life Festival
 	[141823] = 2,	-- New Life Festival Box
 }
-
 
 
 local function ticketAlert()
@@ -159,12 +160,12 @@ end
 
 -- Refreshes the characters exp buff
 function Eventor.GiveThatSweetExpBoost (eventId)
-	UseCollectible(479)
+--	UseCollectible(479)
 end
 
 -- Lets fire up the add-on by registering for events and loading variables
 function Eventor.Initialize(loadOrder)
-	d( Eventor.TITLE .. ": load order fgdfg starting initalization")
+	d( Eventor.TITLE .. ": load order " .. zo_strformat("<<i:1>>", Eventor_loadOrder) .. " starting initalization")
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED )
