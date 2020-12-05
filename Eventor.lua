@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "33.201205",
+	VERSION = "33.201205.1",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -29,7 +29,7 @@ local EVENTLOOT = {
 	[156679] = 2,	-- Undaunted Reward Box
 	[156717] = 1,	-- Hefty Undaunted Reward Box
 	[171267] = 2,	-- Undaunted Reward Box
-	[171268] = 2, -- Glorious Undaunted Reward Box
+	[171268] = 1, -- Glorious Undaunted Reward Box
 
 	-- Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
@@ -119,11 +119,11 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 
 			if EVENTLOOT[itemId] == 1 then	-- The item has drop rate of once per day so instead of increasing the date time store the time stamp
 				accountEventLootHistory[itemId][todaysDate] = os.time()	-- timestamp to store.
-				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%H:%M:%S") .. " and it was " .. accountEventLootHistory[itemId][todaysYear]) .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%H:%M:%S") .. " and it was " .. accountEventLootHistory[itemId][todaysYear] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			else
 				accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
 				accountEventLootHistory[itemId][0] = os.time()	-- when the latest one was picked up
-				d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate]) .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. accountEventLootHistory[itemId][todaysDate]) .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+				d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. accountEventLootHistory[itemId][todaysDate] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			end
 		end
 	end
