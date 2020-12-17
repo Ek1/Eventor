@@ -2,13 +2,14 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "33.201205.2",
+	VERSION = "33.201217",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 local Eventor_loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
+local Event_is_active = false -- 
 
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
@@ -17,6 +18,7 @@ local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
 	AlarmAnnoyance	= 12,	-- How many times user is reminded
 	LongestEvent	= 35,	-- Longest known event this far in days
+	LastDaySeenLoot = 20201217
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
@@ -71,23 +73,23 @@ local EVENTLOOT = {
 	
 	-- New Life Festival
 	[141823] = 2,	-- New Life Festival Box
+	[171327] = 2,	-- New Life Festival Box 2020? 
+	[159463] = 1,	-- Stupendous Jester's Festival Box 2020? 
 }
 
 
 local function ticketAlert()
 
-	AlarmsRemaining = AlarmsRemaining - 1
-
-	if 0 < AlarmsRemaining and DoesCurrencyAmountMeetConfirmationThreshold(CURT_EVENT_TICKETS, Eventor_settings[TicketThresholdAlarm])	then	-- 
+	if 0 < AlarmsRemaining and 9 < GetCurrencyAmount(CURT_EVENT_TICKETS, 3)	then
 		d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
 
 		local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
 		messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
 		messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
 		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
-
-		AlarmsRemaining = AlarmsRemaining - 1
 	end
+
+	AlarmsRemaining = AlarmsRemaining - 1
 end
 
 -- Setter that keeps count of how many boxes this UserID has looted 
@@ -98,10 +100,12 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
+		Eventor_settings.LastDaySeenLoot = tonumber(os.date("%Y%m%d"))
+		Event_is_active = true
 		ticketAlert()
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
-		
+
 			todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
 			todaysYear = tonumber(os.date("%Y"))
 
@@ -125,6 +129,7 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 				accountEventLootHistory[itemId][0] = os.time()	-- when the latest one was picked up
 				d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. accountEventLootHistory[itemId][todaysYear] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			end
+			accountEventLootHistory[0] = (accountEventLootHistory[0] or 0) + 1	-- increase over all counter by one
 		end
 	end
 end
@@ -154,8 +159,10 @@ end
 
 function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
 
-	Eventor.GiveThatSweetExpBoost()
-
+	if Event_is_active then
+		ticketAlert()
+	--	Eventor.GiveThatSweetExpBoost()
+	end
 end
 
 -- Refreshes the characters exp buff
@@ -170,8 +177,9 @@ function Eventor.Initialize(loadOrder)
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED )
 
-    accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)
-    Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)
+	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)
+	
 end
 
 -- Here the magic starts
