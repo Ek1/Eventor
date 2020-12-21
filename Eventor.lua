@@ -1,8 +1,8 @@
 Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
-	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221",
-	VERSION = "33.201221",
+	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
+	VERSION = "33.201221.1",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -177,16 +177,16 @@ function Eventor.TEST()
 	ticketAlert()
 end
 
+-- Refreshes the characters exp buff
+local function GiveThatSweetExpBoost()
+	UseCollectible(1168)	-- Breda's Bottomless Mead Mug
+end
+
 function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
 	if Event_is_active then
 		ticketAlert()
 		GiveThatSweetExpBoost()
 	end
-end
-
--- Refreshes the characters exp buff
-function Eventor.GiveThatSweetExpBoost (eventId)
-	UseCollectible(1168)	-- Breda's Bottomless Mead Mug
 end
 
 -- Lets fire up the add-on by registering for events and loading variables
