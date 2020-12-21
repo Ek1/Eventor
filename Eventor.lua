@@ -1,8 +1,8 @@
 Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
-	DESCRIPTION = "One stop event add-on. Keeps track of the amount of event boxes you have collected and warns if you don't have room for new tickets when an event is on.",
-	VERSION = "33.201217",
+	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221",
+	VERSION = "33.201221",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -16,12 +16,12 @@ accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
-	AlarmAnnoyance	= 12,	-- How many times user is reminded
+	AlarmAnnoyance	= 99999,	-- How many times user is reminded
 	LongestEvent	= 35,	-- Longest known event this far in days
-	LastDaySeenLoot = 20201217
+	LastEventDate = 20201217
 }
 
-local AlarmsRemaining = Eventor_settings.AlarmAnnoyance
+local AlarmsRemaining = Eventor_settings.AlarmAnnoyance or 9999
 
 local todaysDate = tonumber(os.date("%Y%m%d"))
 local todaysYear = tonumber(os.date("%Y"))
@@ -77,6 +77,22 @@ local EVENTLOOT = {
 	[159463] = 1,	-- Stupendous Jester's Festival Box 2020? 
 }
 
+local EVENTQUESTIDS = {
+	[5811] = 1,	-- Snow Bear Plunge
+	[5835] = 1,	-- The Trial of Five-Clawed Guile
+	[5837] = 1,	-- Lava Foot Stomp
+	[5838] = 1,	-- Mud Ball Merriment
+	[5839] = 1,	-- Signal Fire Sprint
+	[5845] = 1,	-- Castle Charm Challenge
+	[5855] = 1,	-- Fish Boon Feast
+	[5856] = 1,	-- Stonetooth Bash
+	[6134] = 1,	-- The New Life Festival
+	[6588] = 1,	-- Old Life Observance
+}
+
+local EVENTEXPBUFFS = {
+	[91449] = "Breda's Magnificent Mead",	-- New Life Festival
+}
 
 local function ticketAlert()
 
@@ -100,18 +116,18 @@ function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, i
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
-		Eventor_settings.LastDaySeenLoot = tonumber(os.date("%Y%m%d"))
+		todaysDate = tonumber(os.date("%Y%m%d"))
+		Eventor_settings.LastEventDate = todaysDate
 		Event_is_active = true
 		ticketAlert()
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 
-			todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
 			todaysYear = tonumber(os.date("%Y"))
 
 			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
 				accountEventLootHistory[itemId] = {}	-- if not, create one
-				accountEventLootHistory[itemId][todaysYear] = 0	-- Keeps track how many boxes in total this year of the itemId 
+				accountEventLootHistory[itemId][todaysYear] = 0	-- Keeps track how many boxes in total this year of the itemId
 				d( ADDON .. ": creating table for " .. itemName)
 			end
 			accountEventLootHistory[itemId][todaysYear] = (accountEventLootHistory[itemId][todaysYear] or 0) + 1	-- increase this years loot counter by one
@@ -139,11 +155,15 @@ end
 function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
-	if currencyType == CURT_EVENT_TICKETS and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
+	if currencyType == CURT_EVENT_TICKETS
+		and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
 		and oldAmount < newAmount then
-		ticketAlert()
+		Event_is_active = true
 
 		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
+		Eventor_settings.LastEventDate = todaysDate
+
+		ticketAlert()
 
 		if not accountEventLootHistory[CURT_EVENT_TICKETS] then
 			accountEventLootHistory[CURT_EVENT_TICKETS] = {}
@@ -158,28 +178,26 @@ function Eventor.TEST()
 end
 
 function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
-
 	if Event_is_active then
 		ticketAlert()
-	--	Eventor.GiveThatSweetExpBoost()
+		GiveThatSweetExpBoost()
 	end
 end
 
 -- Refreshes the characters exp buff
 function Eventor.GiveThatSweetExpBoost (eventId)
---	UseCollectible(479)
+	UseCollectible(1168)	-- Breda's Bottomless Mead Mug
 end
 
 -- Lets fire up the add-on by registering for events and loading variables
 function Eventor.Initialize(loadOrder)
 	d( Eventor.TITLE .. ": load order " .. Eventor_loadOrder .. zo_strformat("<<i:1>>", Eventor_loadOrder) .. " starting initalization")
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained loot
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED )
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
 
-  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)
-	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)
-	
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)	-- Load event loot history
+	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)	-- Load settings
 end
 
 -- Here the magic starts
