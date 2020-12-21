@@ -9,7 +9,7 @@ Eventor = {
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 local Eventor_loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
-local Event_is_active = false -- 
+local Event_is_active = false --
 
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
