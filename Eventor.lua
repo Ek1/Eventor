@@ -8,8 +8,7 @@ Eventor = {
 	URL = "https://github.com/Ek1/Eventor"
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
-local Eventor_loadOrder = 1	-- Variable to keep count how many loads have been done before it was this ones turn.
-local Event_is_active = false --
+local Event_is_active = false	-- default is that it is off.
 
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
@@ -110,7 +109,7 @@ end
 
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
-function Eventor.lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, itemId, _)
+function Eventor:lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, itemId, _)
 
 	itemId = tonumber(itemId)
 
@@ -152,7 +151,7 @@ end
 
 -- Listens if the ticket currency changes for loot reasons.
 -- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
-function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
+function Eventor:EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS
@@ -173,16 +172,44 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 	end
 end
 
-function Eventor.TEST()
+-- 10032	EVENT_EFFECT_CHANGED (number eventCode, MsgEffectResult changeType, number effectSlot, string effectName, string unitTag, number beginTime, number endTime, number stackCount, string iconName, string buffType, BuffEffectType effectType, AbilityType abilityType, StatusEffectType statusEffectType, string unitName, number unitId, number abilityId, CombatUnitType sourceType)
+function Eventor:EVENT_EFFECT_CHANGED (eventCode, MsgEffectResult, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, BuffEffectType, AbilityType, StatusEffectType, unitName, unitId, abilityId, CombatUnitTypeSourceType)
+--	d( ADDON  .. ": " .. MsgEffectResult .. " " .. effectName .. " " .. unitTag .. "/" .. unitName .. " " .. beginTime)
+end
+
+
+function Eventor_TEST()
 	ticketAlert()
 end
+
+
+-- "/esoui/art/icons/servicemappins/servicepin_event.dds"
+
+--[[
+
+
+/zgoo mouse
+
+ah wait. it looks like the pin is not a POI but a location pin, which is a different api
+GetNumMapLocations()
+* Returns: integer* numMapLocations
+
+IsMapLocationVisible(luaindex locationIndex)
+* Returns: bool* isVisible
+
+
+]]
+
+
+
+-- Impersinator POI type =  175
 
 -- Refreshes the characters exp buff
 local function GiveThatSweetExpBoost()
 	UseCollectible(1168)	-- Breda's Bottomless Mead Mug
 end
 
-function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
+function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
 	if Event_is_active then
 		ticketAlert()
 		GiveThatSweetExpBoost()
@@ -190,11 +217,13 @@ function Eventor.EVENT_PLAYER_ACTIVATED(_, shouldBeBooleanForWasItReloaduiButIsA
 end
 
 -- Lets fire up the add-on by registering for events and loading variables
-function Eventor.Initialize(loadOrder)
-	d( Eventor.TITLE .. ": load order " .. Eventor_loadOrder .. zo_strformat("<<i:1>>", Eventor_loadOrder) .. " starting initalization")
+function Eventor.Initialize()
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
+
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.EVENT_EFFECT_CHANGED)
+	EVENT_MANAGER:AddFilterForEvent(ADDON, EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91449)
 
   accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)	-- Load event loot history
 	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)	-- Load settings
@@ -203,13 +232,10 @@ end
 -- Here the magic starts
 function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
   if loadedAddOnName == ADDON then
+		--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
+		EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
 
-	--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
-	EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
-
-	Eventor.Initialize(Eventor_loadOrder)
-  else
-	Eventor_loadOrder = Eventor_loadOrder + 1
+		Eventor.Initialize()
   end
 end
 -- Registering for the add on loading loop
