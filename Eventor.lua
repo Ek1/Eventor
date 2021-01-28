@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "33.201221.1",
+	VERSION = "33.210128.3",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -34,6 +34,8 @@ local EVENTLOOT = {
 
 	-- Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
+	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
+	--|H1:item:171535:124:1:0:0:0:0:0:0:0:0:0:0:0:1:0:0:1:0:0:0|h|h
 
 	-- Murkmire Celebration
 
@@ -72,8 +74,8 @@ local EVENTLOOT = {
 	
 	-- New Life Festival
 	[141823] = 2,	-- New Life Festival Box
-	[171327] = 2,	-- New Life Festival Box 2020? 
-	[159463] = 1,	-- Stupendous Jester's Festival Box 2020? 
+	[171327] = 2,	-- New Life Festival Box 2020
+	[159463] = 1,	-- Stupendous Jester's Festival Box 2020
 }
 
 local EVENTQUESTIDS = {
@@ -109,11 +111,15 @@ end
 
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
-function Eventor:lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, itemId, _)
+function Eventor:lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, StringitemId, _)
 
-	itemId = tonumber(itemId)
+	itemId = tonumber(StringitemId)
+
+	d( ADDON .. ": looted " .. itemName .. "(" .. itemId .. ")")
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
+
+		d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
 
 		todaysDate = tonumber(os.date("%Y%m%d"))
 		Eventor_settings.LastEventDate = todaysDate
@@ -178,8 +184,9 @@ function Eventor:EVENT_EFFECT_CHANGED (eventCode, MsgEffectResult, effectSlot, e
 end
 
 
-function Eventor_TEST()
+function Eventor.Eventor_TEST(inpuuut)
 	ticketAlert()
+	Eventor.lootedEventBox(a, b, Testi, d, e, f, true, h, i, inpuuut, k)
 end
 
 
