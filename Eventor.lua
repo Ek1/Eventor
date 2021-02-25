@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "33.210128.3",
+	VERSION = "33.210225",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -26,39 +26,47 @@ local todaysDate = tonumber(os.date("%Y%m%d"))
 local todaysYear = tonumber(os.date("%Y"))
 
 local EVENTLOOT = {
-	-- Undaunted Celebration
+	-- W03	Undaunted Celebration
 	[156679] = 2,	-- Undaunted Reward Box
 	[156717] = 1,	-- Hefty Undaunted Reward Box
 	[171267] = 2,	-- Undaunted Reward Box
 	[171268] = 1, -- Glorious Undaunted Reward Box
 
-	-- Midyear Mayhem
+	-- W04	Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
 	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 	--|H1:item:171535:124:1:0:0:0:0:0:0:0:0:0:0:0:1:0:0:1:0:0:0|h|h
 
-	-- Murkmire Celebration
+	-- W07	Murkmire Celebration
 
-	-- Thieves Guild and Dark Brotherhood Celebration
+	-- W08	Tribunal Celebration
+	[171476] = 2,	-- Tribunal Coffer
+	[171480] = 1,	-- Glorious Tribunal Coffer
 
-	-- Jester's Festival
---	[] = 2,	-- Stupendous Jester's Festival Box
---	[] = 1,	-- Jester's Festival Box
+	-- W09	Thieves Guild and Dark Brotherhood Celebration
 
-	-- Anniversary Jubilee
---	[] = 2,	-- Anniversary Jubilee Gift Box
+	-- W12	Jester's Festival
+	--	[] = 2,	-- Stupendous Jester's Festival Box
+	--	[] = 1,	-- Jester's Festival Box
 
-	-- Vampire Week
+	-- W13	(4th April) 	Anniversary Jubilee
+	--	[] = 2,	-- Anniversary Jubilee Gift Box
 
-	-- Midyear Mayhem
+	-- W18	Vampire Week
 
-	-- Summerset Celebration
+	-- W25	Midyear Mayhem
 
-	-- Orsinium Celebration
+	-- W29	Summerset Celebration
 
-	-- Imperial City Celebration
+	-- W31	Orsinium Celebration
 
-	-- Witches Festival
+	-- W35	Imperial City Celebration
+
+	-- W38	Lost treasures of Skyrim
+  [167226] = 1,	-- Box of Gray Host Pillage
+	[167227] = 2,	-- Bulging Box of Gray Host Pillage
+	
+	-- W42	Witches Festival
 	[167234] = 2,	-- Plunder Skull
 	[167235] = 1,	-- Dremora Plunder Skull, Arena
 	[167236] = 1,	-- Dremora Plunder Skull, Insurgent
@@ -68,11 +76,7 @@ local EVENTLOOT = {
 	[167240] = 1,	-- Dremora Plunder Skull, Trial
 	[167241] = 1,	-- Dremora Plunder Skull, World
 	
-	-- Lost treasures of Skyrim
-  [167226] = 1,	-- Box of Gray Host Pillage
-	[167227] = 2,	-- Bulging Box of Gray Host Pillage
-	
-	-- New Life Festival
+	-- w50	New Life Festival
 	[141823] = 2,	-- New Life Festival Box
 	[171327] = 2,	-- New Life Festival Box 2020
 	[159463] = 1,	-- Stupendous Jester's Festival Box 2020
@@ -109,17 +113,21 @@ local function ticketAlert()
 	AlarmsRemaining = AlarmsRemaining - 1
 end
 
+
+-- 100033	EVENT_INVENTORY_SINGLE_SLOT_UPDATE (number eventCode, Bag bagId, number slotId, boolean isNewItem, ItemUISoundCategory itemSoundCategory, number inventoryUpdateReason, number stackCountChange)
+
+
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
-function Eventor:lootedEventBox(_, _, itemName, _, _, _, lootedByPlayer, _, _, StringitemId, _)
+function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemUISoundCategory, LootItemType, lootedByPlayer, questItemIcon, questItemIcon, StringitemId, isStolen)
 
 	itemId = tonumber(StringitemId)
 
-	d( ADDON .. ": looted " .. itemName .. "(" .. itemId .. ")")
+--	d( ADDON .. ": looted " .. itemName .. "(" .. itemId .. ")")
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 
-		d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
+--		d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
 
 		todaysDate = tonumber(os.date("%Y%m%d"))
 		Eventor_settings.LastEventDate = todaysDate
@@ -157,7 +165,7 @@ end
 
 -- Listens if the ticket currency changes for loot reasons.
 -- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
-function Eventor:EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
+function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS
@@ -179,14 +187,15 @@ function Eventor:EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 end
 
 -- 10032	EVENT_EFFECT_CHANGED (number eventCode, MsgEffectResult changeType, number effectSlot, string effectName, string unitTag, number beginTime, number endTime, number stackCount, string iconName, string buffType, BuffEffectType effectType, AbilityType abilityType, StatusEffectType statusEffectType, string unitName, number unitId, number abilityId, CombatUnitType sourceType)
-function Eventor:EVENT_EFFECT_CHANGED (eventCode, MsgEffectResult, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, BuffEffectType, AbilityType, StatusEffectType, unitName, unitId, abilityId, CombatUnitTypeSourceType)
+function Eventor.EVENT_EFFECT_CHANGED (eventCode, MsgEffectResult, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, BuffEffectType, AbilityType, StatusEffectType, unitName, unitId, abilityId, CombatUnitTypeSourceType)
 --	d( ADDON  .. ": " .. MsgEffectResult .. " " .. effectName .. " " .. unitTag .. "/" .. unitName .. " " .. beginTime)
 end
 
 
 function Eventor.Eventor_TEST(inpuuut)
 	ticketAlert()
-	Eventor.lootedEventBox(a, b, Testi, d, e, f, true, h, i, inpuuut, k)
+	Eventor.lootedEventBox(eventCode, player, itemName, 1, ItemUISoundCategory, LootItemType, true, questItemIcon, questItemIcon, inpuuut, isStolen)
+
 end
 
 
