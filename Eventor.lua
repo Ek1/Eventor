@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "33.210225",
+	VERSION = "34.210325",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor"
@@ -17,7 +17,7 @@ local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
 	AlarmAnnoyance	= 99999,	-- How many times user is reminded
 	LongestEvent	= 35,	-- Longest known event this far in days
-	LastEventDate = 20201217
+	LastEventDate = 20210228
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance or 9999
@@ -46,8 +46,8 @@ local EVENTLOOT = {
 	-- W09	Thieves Guild and Dark Brotherhood Celebration
 
 	-- W12	Jester's Festival
-	--	[] = 2,	-- Stupendous Jester's Festival Box
-	--	[] = 1,	-- Jester's Festival Box
+	[171731] = 1,	-- Stupendous Jester's Festival Box
+	[171732] = 2,	-- Jester's Festival Box
 
 	-- W13	(4th April) 	Anniversary Jubilee
 	--	[] = 2,	-- Anniversary Jubilee Gift Box
