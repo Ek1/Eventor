@@ -93,9 +93,19 @@ local EVENTQUESTIDS = {
 	[5856] = 1,	-- Stonetooth Bash
 	[6134] = 1,	-- The New Life Festival
 	[6588] = 1,	-- Old Life Observance
+
+	--	Jester's Festival
+	[5921] = 1,	-- Springtime Flair
+	[5931] = 1,	-- A Noble Guest
+	[5937] = 1,	-- Royal Revelry
+	[5941] = 1,	-- The Jester's Festival
+	[6622] = 1,	-- A Foe Most Porcine
+	[6632] = 1,	-- The King's Spoils
+	[6640] = 1,	-- Prankster's Carnival
 }
 
 local EVENTEXPBUFFS = {
+	[91369] = 1167, --"Jester's Experience Boost Pie"	-- New Life Festival
 	[91449] = "Breda's Magnificent Mead",	-- New Life Festival
 }
 
@@ -186,43 +196,16 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 	end
 end
 
--- 10032	EVENT_EFFECT_CHANGED (number eventCode, MsgEffectResult changeType, number effectSlot, string effectName, string unitTag, number beginTime, number endTime, number stackCount, string iconName, string buffType, BuffEffectType effectType, AbilityType abilityType, StatusEffectType statusEffectType, string unitName, number unitId, number abilityId, CombatUnitType sourceType)
-function Eventor.EVENT_EFFECT_CHANGED (eventCode, MsgEffectResult, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, BuffEffectType, AbilityType, StatusEffectType, unitName, unitId, abilityId, CombatUnitTypeSourceType)
---	d( ADDON  .. ": " .. MsgEffectResult .. " " .. effectName .. " " .. unitTag .. "/" .. unitName .. " " .. beginTime)
-end
-
-
 function Eventor.Eventor_TEST(inpuuut)
 	ticketAlert()
 	Eventor.lootedEventBox(eventCode, player, itemName, 1, ItemUISoundCategory, LootItemType, true, questItemIcon, questItemIcon, inpuuut, isStolen)
-
 end
-
-
--- "/esoui/art/icons/servicemappins/servicepin_event.dds"
-
---[[
-
-
-/zgoo mouse
-
-ah wait. it looks like the pin is not a POI but a location pin, which is a different api
-GetNumMapLocations()
-* Returns: integer* numMapLocations
-
-IsMapLocationVisible(luaindex locationIndex)
-* Returns: bool* isVisible
-
-
-]]
-
-
 
 -- Impersinator POI type =  175
 
 -- Refreshes the characters exp buff
-local function GiveThatSweetExpBoost()
-	UseCollectible(1168)	-- Breda's Bottomless Mead Mug
+local function GiveThatSweetExpBoost( abilityId )
+	UseCollectible( EVENTEXPBUFFS[abilityId] )
 end
 
 function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
@@ -232,17 +215,38 @@ function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIs
 	end
 end
 
+--	100034	EVENT_EFFECT_CHANGED (integer eventCode, integer changeType, integer effectSlot, string effectName, string unitTag, number beginTime, number endTime, integer stackCount, string iconName, string buffType, integer effectType, integer abilityType, integer statusEffectType, string unitName, integer unitId, integer abilityId, integer sourceUnitType)
+function Eventor.EventBuffCatched(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
+
+	if changeType == EFFECT_RESULT_GAINED
+	and EVENTEXPBUFFS[abilityId]
+	and unitTag ~= "player" then
+		GiveThatSweetExpBoost( abilityId )
+		d( ADDON  .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, DISPLAY_NAME_LINK_TYPE, unitName) .. "/" .. zo_strformat("<<1>>", unitName) .. " + " .. effectName)
+	end
+end
+
+--	100034	EVENT_EFFECT_CHANGED (integer eventCode, integer changeType, integer effectSlot, string effectName, string unitTag, number beginTime, number endTime, integer stackCount, string iconName, string buffType, integer effectType, integer abilityType, integer statusEffectType, string unitName, integer unitId, integer abilityId, integer sourceUnitType)
+function Eventor.ListenToEventBuffs(boolean)
+	if boolean then
+		EVENT_MANAGER:RegisterForEvent("Eventor 91369", EVENT_EFFECT_CHANGED, Eventor.EventBuffCatched)
+		EVENT_MANAGER:AddFilterForEvent("Eventor 91369", EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91369)
+
+		EVENT_MANAGER:RegisterForEvent("Eventor 91449", EVENT_EFFECT_CHANGED, Eventor.EventBuffCatched)
+		EVENT_MANAGER:AddFilterForEvent("Eventor 91449", EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91449)
+	end
+end
+
 -- Lets fire up the add-on by registering for events and loading variables
 function Eventor.Initialize()
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
 
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.EVENT_EFFECT_CHANGED)
-	EVENT_MANAGER:AddFilterForEvent(ADDON, EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91449)
-
   accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)	-- Load event loot history
 	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)	-- Load settings
+
+	Eventor.ListenToEventBuffs(false)
 end
 
 -- Here the magic starts
