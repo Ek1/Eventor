@@ -2,10 +2,10 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "34.210325",
+	VERSION = "34.210330",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
-	URL = "https://github.com/Ek1/Eventor"
+	URL = "https://github.com/Ek1/Eventor",
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 local Event_is_active = false	-- default is that it is off.
@@ -17,7 +17,8 @@ local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
 	AlarmAnnoyance	= 99999,	-- How many times user is reminded
 	LongestEvent	= 35,	-- Longest known event this far in days
-	LastEventDate = 20210228
+	LastEventDate = 20210228,
+	KeepEventBuffsOn = true,
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance or 9999
@@ -104,9 +105,9 @@ local EVENTQUESTIDS = {
 	[6640] = 1,	-- Prankster's Carnival
 }
 
-local EVENTEXPBUFFS = {
-	[91369] = 1167, --"Jester's Experience Boost Pie"	-- New Life Festival
-	[91449] = "Breda's Magnificent Mead",	-- New Life Festival
+EVENTEXPBUFFS = {
+	[91369] = 1167, -- Jester's Experience Boost Pie
+	[91449] = 1168, -- Breda's Magnificent Mead
 }
 
 local function ticketAlert()
@@ -179,8 +180,8 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS
-		and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
-		and oldAmount < newAmount then
+	and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
+	and oldAmount < newAmount then
 		Event_is_active = true
 
 		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
@@ -201,11 +202,13 @@ function Eventor.Eventor_TEST(inpuuut)
 	Eventor.lootedEventBox(eventCode, player, itemName, 1, ItemUISoundCategory, LootItemType, true, questItemIcon, questItemIcon, inpuuut, isStolen)
 end
 
--- Impersinator POI type =  175
-
 -- Refreshes the characters exp buff
 local function GiveThatSweetExpBoost( abilityId )
-	UseCollectible( EVENTEXPBUFFS[abilityId] )
+	if abilityId ~= nil then
+		UseCollectible( EVENTEXPBUFFS[abilityId] )
+	else 
+		UseCollectible( EVENTEXPBUFFS[Eventor_settings.LastEventBuffId] )
+	end
 end
 
 function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
@@ -215,25 +218,28 @@ function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIs
 	end
 end
 
+activePlayerBuffs = {}
 --	100034	EVENT_EFFECT_CHANGED (integer eventCode, integer changeType, integer effectSlot, string effectName, string unitTag, number beginTime, number endTime, integer stackCount, string iconName, string buffType, integer effectType, integer abilityType, integer statusEffectType, string unitName, integer unitId, integer abilityId, integer sourceUnitType)
-function Eventor.EventBuffCatched(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
+function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
+	if not EVENTEXPBUFFS[abilityId] then return end
 
-	if changeType == EFFECT_RESULT_GAINED
-	and EVENTEXPBUFFS[abilityId]
-	and unitTag ~= "player" then
-		GiveThatSweetExpBoost( abilityId )
-		d( ADDON  .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, DISPLAY_NAME_LINK_TYPE, unitName) .. "/" .. zo_strformat("<<1>>", unitName) .. " + " .. effectName)
-	end
-end
-
---	100034	EVENT_EFFECT_CHANGED (integer eventCode, integer changeType, integer effectSlot, string effectName, string unitTag, number beginTime, number endTime, integer stackCount, string iconName, string buffType, integer effectType, integer abilityType, integer statusEffectType, string unitName, integer unitId, integer abilityId, integer sourceUnitType)
-function Eventor.ListenToEventBuffs(boolean)
-	if boolean then
-		EVENT_MANAGER:RegisterForEvent("Eventor 91369", EVENT_EFFECT_CHANGED, Eventor.EventBuffCatched)
-		EVENT_MANAGER:AddFilterForEvent("Eventor 91369", EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91369)
-
-		EVENT_MANAGER:RegisterForEvent("Eventor 91449", EVENT_EFFECT_CHANGED, Eventor.EventBuffCatched)
-		EVENT_MANAGER:AddFilterForEvent("Eventor 91449", EVENT_EFFECT_CHANGED, REGISTER_FILTER_ABILITY_ID, 91449)
+	if GetRawUnitName("player") == unitName	then
+		if changeType == EFFECT_RESULT_GAINED then
+			activePlayerBuffs[abilityId] = true
+--			d( ADDON .. ":  player gained " .. tostring(abilityId) .. "/" .. effectName )
+		elseif changeType == EFFECT_RESULT_UPDATED then
+			activePlayerBuffs[abilityId] = true
+--			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed" )
+			Eventor_settings.LastEventBuffId = abilityId
+		elseif changeType == EFFECT_RESULT_FADED	then
+			activePlayerBuffs[abilityId] = false
+--			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
+		end
+	else
+		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED) and not activePlayerBuffs[abilityId] then
+--			d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. " ".. tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType )
+			GiveThatSweetExpBoost(abilityId)
+		end
 	end
 end
 
@@ -246,7 +252,9 @@ function Eventor.Initialize()
   accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)	-- Load event loot history
 	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)	-- Load settings
 
-	Eventor.ListenToEventBuffs(false)
+--	if Eventor_settings.KeepEventBuffsOn then
+		EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
+--	end
 end
 
 -- Here the magic starts
