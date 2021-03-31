@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "34.210330",
+	VERSION = "34.210401",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -51,7 +51,7 @@ local EVENTLOOT = {
 	[171732] = 2,	-- Jester's Festival Box
 
 	-- W13	(4th April) 	Anniversary Jubilee
-	--	[] = 2,	-- Anniversary Jubilee Gift Box
+	[171779] = 2,	-- 7th Anniversary Jubilee Gift Box
 
 	-- W18	Vampire Week
 
@@ -108,6 +108,7 @@ local EVENTQUESTIDS = {
 EVENTEXPBUFFS = {
 	[91369] = 1167, -- Jester's Experience Boost Pie
 	[91449] = 1168, -- Breda's Magnificent Mead
+	[152514] = 9012,	-- 2021 Jubilee cake
 }
 
 local function ticketAlert()
@@ -226,7 +227,7 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 	if GetRawUnitName("player") == unitName	then
 		if changeType == EFFECT_RESULT_GAINED then
 			activePlayerBuffs[abilityId] = true
---			d( ADDON .. ":  player gained " .. tostring(abilityId) .. "/" .. effectName )
+--			d( ADDON .. ": player gained " .. tostring(abilityId) .. "/" .. effectName )
 		elseif changeType == EFFECT_RESULT_UPDATED then
 			activePlayerBuffs[abilityId] = true
 --			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed" )
