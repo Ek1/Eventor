@@ -2,13 +2,13 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "34.210401",
+	VERSION = "1031.210831",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
-local Event_is_active = false	-- default is that it is off.
+local Event_is_active = false	-- default is that there is no event on.
 
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
@@ -17,8 +17,10 @@ local Eventor_settings = {	-- default settings
 	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
 	AlarmAnnoyance	= 99999,	-- How many times user is reminded
 	LongestEvent	= 35,	-- Longest known event this far in days
-	LastEventDate = 20210228,
+	LastEventDate = 20210415,
 	KeepEventBuffsOn = true,
+	LastDateBuffWasTried = 20210415,
+	LastTimeBuffWasGained = 1618495200,
 }
 
 local AlarmsRemaining = Eventor_settings.AlarmAnnoyance or 9999
@@ -33,10 +35,10 @@ local EVENTLOOT = {
 	[171267] = 2,	-- Undaunted Reward Box
 	[171268] = 1, -- Glorious Undaunted Reward Box
 
-	-- W04	Midyear Mayhem
+	-- W04 & W29	Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
 	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
-	--|H1:item:171535:124:1:0:0:0:0:0:0:0:0:0:0:0:1:0:0:1:0:0:0|h|h
+	[175563] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 
 	-- W07	Murkmire Celebration
 
@@ -61,12 +63,16 @@ local EVENTLOOT = {
 
 	-- W31	Orsinium Celebration
 
+	-- w34 Year one
+  [175795] = 1,	-- Glorious Year One Coffer
+  [175796] = 2,	-- Year One Coffer
+
 	-- W35	Imperial City Celebration
 
 	-- W38	Lost treasures of Skyrim
   [167226] = 1,	-- Box of Gray Host Pillage
 	[167227] = 2,	-- Bulging Box of Gray Host Pillage
-	
+
 	-- W42	Witches Festival
 	[167234] = 2,	-- Plunder Skull
 	[167235] = 1,	-- Dremora Plunder Skull, Arena
@@ -76,7 +82,7 @@ local EVENTLOOT = {
 	[167239] = 1,	-- Dremora Plunder Skull, Public & Sweeper
 	[167240] = 1,	-- Dremora Plunder Skull, Trial
 	[167241] = 1,	-- Dremora Plunder Skull, World
-	
+
 	-- w50	New Life Festival
 	[141823] = 2,	-- New Life Festival Box
 	[171327] = 2,	-- New Life Festival Box 2020
@@ -168,7 +174,7 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 			else
 				accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
 				accountEventLootHistory[itemId][0] = os.time()	-- when the latest one was picked up
-				d( ADDON .. ": " .. accountEventLootHistory[itemId][todaysDate] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. accountEventLootHistory[itemId][todaysYear] .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
+				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysYear]) .. " this year." )
 			end
 			accountEventLootHistory[0] = (accountEventLootHistory[0] or 0) + 1	-- increase over all counter by one
 		end
@@ -195,6 +201,7 @@ function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAm
 		end
 
 		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
+--		d( ADDON .. ": Gained " .. accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] .. " tickets")
 	end
 end
 
@@ -206,9 +213,10 @@ end
 -- Refreshes the characters exp buff
 local function GiveThatSweetExpBoost( abilityId )
 	if abilityId ~= nil then
-		UseCollectible( EVENTEXPBUFFS[abilityId] )
-	else 
-		UseCollectible( EVENTEXPBUFFS[Eventor_settings.LastEventBuffId] )
+--		UseCollectible( EVENTEXPBUFFS[abilityId] )
+	else
+		 
+--		UseCollectible( EVENTEXPBUFFS[Eventor_settings.LastEventBuffId] )
 	end
 end
 
@@ -230,9 +238,11 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 --			d( ADDON .. ": player gained " .. tostring(abilityId) .. "/" .. effectName )
 		elseif changeType == EFFECT_RESULT_UPDATED then
 			activePlayerBuffs[abilityId] = true
---			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed" )
+			Eventor_settings.LastDateBuffWasTried = tonumber(os.date("%Y%m%d"))
+			Eventor_settings.LastTimeBuffWasGained = os.time()
 			Eventor_settings.LastEventBuffId = abilityId
-		elseif changeType == EFFECT_RESULT_FADED	then
+--			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed for " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
+elseif changeType == EFFECT_RESULT_FADED	then
 			activePlayerBuffs[abilityId] = false
 --			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
 		end
