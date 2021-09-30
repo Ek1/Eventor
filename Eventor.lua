@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "1031.210831",
+	VERSION = "1031.210930",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -70,23 +70,57 @@ local EVENTLOOT = {
 	-- W35	Imperial City Celebration
 
 	-- W38	Lost treasures of Skyrim
-  [167226] = 1,	-- Box of Gray Host Pillage
-	[167227] = 2,	-- Bulging Box of Gray Host Pillage
+  [167227] = 1,	-- Bulging Box of Gray Host Pillage	2020
+	[167226] = 2,	-- Box of Gray Host Pillage	2020
+
+	-- W39	Lost treasures of Skyrim
+	[181433] = 1,	-- 20	Glorious Blackwood Legates' Coffer
+	[178723] = 2,	-- 20	Blackwood Legates' Coffer
 
 	-- W42	Witches Festival
-	[167234] = 2,	-- Plunder Skull
-	[167235] = 1,	-- Dremora Plunder Skull, Arena
-	[167236] = 1,	-- Dremora Plunder Skull, Insurgent
-	[167237] = 1,	-- Dremora Plunder Skull, Delve
-	[167238] = 1,	-- Dremora Plunder Skull, Dungeon
-	[167239] = 1,	-- Dremora Plunder Skull, Public & Sweeper
-	[167240] = 1,	-- Dremora Plunder Skull, Trial
-	[167241] = 1,	-- Dremora Plunder Skull, World
+	[84521] = 2,	-- 16	Plunder Skull
+	[128358] = 2,	-- 17	Plunder Skull
+	[141770] = 2,	-- 18	Plunder Skull
+	[141771] = 1,	-- 18 Dremora Plunder Skull, Arena
+	[141772] = 1,	-- 18 Dremora Plunder Skull, Insurgent
+	[141773] = 1,	-- 18 Dremora Plunder Skull, Delve
+	[141774] = 1,	-- 18 Dremora Plunder Skull, Dungeon
+	[141775] = 1,	-- 18 Dremora Plunder Skull, Public & Sweeper
+	[141776] = 1,	-- 18 Dremora Plunder Skull, Trial
+	[141777] = 1,	-- 18 Dremora Plunder Skull, World
+	[153502] = 2,	-- 19	Plunder Skull
+	[153503] = 1,	-- 19 Dremora Plunder Skull, Arena
+	[153504] = 1,	-- 19 Dremora Plunder Skull, Insurgent
+	[153505] = 1,	-- 19 Dremora Plunder Skull, Delve
+	[153506] = 1,	-- 19 Dremora Plunder Skull, Dungeon
+	[153507] = 1,	-- 19 Dremora Plunder Skull, Public & Sweeper
+	[153508] = 1,	-- 19 Dremora Plunder Skull, Trial
+	[153509] = 1,	-- 19 Dremora Plunder Skull, World
+	[167234] = 2,	-- 20 Plunder Skull
+	[167235] = 1,	-- 20 Dremora Plunder Skull, Arena
+	[167236] = 1,	-- 20 Dremora Plunder Skull, Insurgent
+	[167237] = 1,	-- 20 Dremora Plunder Skull, Delve
+	[167238] = 1,	-- 20 Dremora Plunder Skull, Dungeon
+	[167239] = 1,	-- 20 Dremora Plunder Skull, Public & Sweeper
+	[167240] = 1,	-- 20 Dremora Plunder Skull, Trial
+	[167241] = 1,	-- 20 Dremora Plunder Skull, World
+	[178686] = 2,	-- 21 Plunder Skull
+	[178687] = 1,	-- Dremora Plunder Skull, Arena
+	[178688] = 1,	-- Dremora Plunder Skull, Insurgent
+	[178689] = 1,	-- Dremora Plunder Skull, Delve
+	[178690] = 1,	-- Dremora Plunder Skull, Dungeon
+	[178691] = 1,	-- Dremora Plunder Skull, Public & Sweeper
+	[178692] = 1,	-- Dremora Plunder Skull, Trial
+	[178693] = 1,	-- Dremora Plunder Skull, World
 
 	-- w50	New Life Festival
-	[141823] = 2,	-- New Life Festival Box
-	[171327] = 2,	-- New Life Festival Box 2020
-	[159463] = 1,	-- Stupendous Jester's Festival Box 2020
+	[96390] = 2,	-- 16	New Life Festival Box
+	[133557] = 2,	-- 17	New Life Festival Box
+	[141823] = 2,	-- 18	New Life Festival Box
+	[159463] = 1,	-- 19	Stupendous Jester's Festival Box
+	[156779] = 2,	-- 19	New Life Festival Box
+	[171731] = 1,	-- 20	Stupendous Jester's Festival Box
+	[171327] = 2,	-- 20	New Life Festival Box
 }
 
 local EVENTQUESTIDS = {
