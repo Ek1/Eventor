@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets. v33.201221.1",
-	VERSION = "1031.210930",
+	VERSION = "1032.211216",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -34,6 +34,8 @@ local EVENTLOOT = {
 	[156717] = 1,	-- Hefty Undaunted Reward Box
 	[171267] = 2,	-- Undaunted Reward Box
 	[171268] = 1, -- Glorious Undaunted Reward Box
+	[182317] = 2,	-- Undaunted Reward Box	2021-11-18
+	[182318] = 1, -- Glorious Undaunted Reward Box	2021-11-18
 
 	-- W04 & W29	Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
@@ -121,6 +123,7 @@ local EVENTLOOT = {
 	[156779] = 2,	-- 19	New Life Festival Box
 	[171731] = 1,	-- 20	Stupendous Jester's Festival Box
 	[171327] = 2,	-- 20	New Life Festival Box
+	[182494] = 2,	-- 21	New Life Festival Box
 }
 
 local EVENTQUESTIDS = {
