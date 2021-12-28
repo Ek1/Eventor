@@ -6,5 +6,6 @@
 ## Author: Ek1
 ## License: BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License
 ## SavedVariables: Eventor_accountEventLootHistory Eventor_settings
+## DependsOn: LibAddonMenu-2.0
 
 Eventor.lua
