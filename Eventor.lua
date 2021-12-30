@@ -2,30 +2,32 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1032.211228",
+	VERSION = "1032.211230",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
-local Event_is_active = false	-- default is that there is no event on.
+local eventIsActive = false	-- default is that there is no event on.
 
+-- THESE SHOULD BE LOCAL but nice to be not for /zgoo accountEventLootHistory
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 --/script d (  ZO_FormatTimeLargestTwo( GetTimedActivityTimeRemainingSeconds(2)  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))  
 
-local Eventor_settings = {	-- default settings
-	TicketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
-	AlarmAnnoyance	= 99999,	-- How many times user is reminded
-	LongestEvent	= 35,	-- Longest known event this far in days
-	KeepEventBuffsOn = true,
-	EventBuffsThreshold = 100,
-	LastTimeBuffWasGained = 1618495200,
-	LastTimeEventLootWasGained = 1618495200,
+local eventorSettings = {	-- default settings
+	ticketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
+	alarmAnnoyance	= 99999,	-- How many times user is reminded
+	longestEvent	= 35,	-- Longest known event this far in days
+	keepEventBuffsOn = true,
+	eventBuffsThreshold = 60,
+	lastTimeSomeoneGainedEventBuff = 1640820402,
+	whenOurEventBuffRunsOut = 1618495200,
+	lastTimeEventLootWasGained = 1640820402,
 }
 
-local AlarmsRemaining = Eventor_settings.AlarmAnnoyance or 9999
+local alarmsRemaining = eventorSettings.alarmAnnoyance or 9999
 
 local dailysReseted = os.time() + GetTimedActivityTimeRemainingSeconds(2) - 86400	-- 24h*60min*60sec = 86400 seconds
 
@@ -161,7 +163,7 @@ EVENTEXPBUFFS = {
 
 local function ticketAlert()
 
-	if 0 < AlarmsRemaining and 9 < GetCurrencyAmount(CURT_EVENT_TICKETS, 3)	then
+	if 0 < alarmsRemaining and 9 < GetCurrencyAmount(CURT_EVENT_TICKETS, 3)	then
 		d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
 
 		local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
@@ -170,12 +172,10 @@ local function ticketAlert()
 		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
 	end
 
-	AlarmsRemaining = AlarmsRemaining - 1
+	alarmsRemaining = alarmsRemaining - 1
 end
 
-
 -- 100033	EVENT_INVENTORY_SINGLE_SLOT_UPDATE (number eventCode, Bag bagId, number slotId, boolean isNewItem, ItemUISoundCategory itemSoundCategory, number inventoryUpdateReason, number stackCountChange)
-
 
 -- Setter that keeps count of how many boxes this UserID has looted 
 -- 100032	EVENT_LOOT_RECEIVED (number eventCode, string receivedBy, string itemName, number quantity, ItemUISoundCategory soundCategory, LootItemType lootType, boolean self, boolean isPickpocketLoot, string questItemIcon, number itemId, boolean isStolen)
@@ -187,8 +187,8 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
 --		d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
 
-		Eventor_settings.LastTimeEventLootWasGained = os.time()
-		Event_is_active = true
+		eventorSettings.lastTimeEventLootWasGained = os.time()
+		eventIsActive = true
 		ticketAlert()
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
@@ -226,17 +226,17 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 end
 
 -- Listens if the ticket currency changes for loot reasons.
--- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, CurrencyChangeReason reason)
-function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, CurrencyChangeReason)
+-- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, currencyChangeReason reason)
+function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, currencyChangeReason)
 
 	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS
-	and (CurrencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or CurrencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
+	and (currencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or currencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
 	and oldAmount < newAmount then
-		Event_is_active = true
+		eventIsActive = true
 
 		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
---		Eventor_settings.LastEventDate = todaysDate
+--		eventorSettings.LastEventDate = todaysDate
 
 		ticketAlert()
 
@@ -256,15 +256,21 @@ end
 
 -- Refreshes the characters exp buff
 local function GiveThatSweetExpBoost( abilityId )
-	if abilityId ~= nil then
-		UseCollectible( EVENTEXPBUFFS[abilityId] )
-	else
-		UseCollectible( EVENTEXPBUFFS[Eventor_settings.LastEventBuffId] )
+
+	if	eventorSettings.keepEventBuffsOn  and
+	(eventorSettings.whenOurEventBuffRunsOut or 0) + (eventorSettings.eventBuffsThreshold * 60)	<	os.time()	then
+		if abilityId ~= nil then
+			UseCollectible( EVENTEXPBUFFS[abilityId] )
+		else
+			UseCollectible( EVENTEXPBUFFS[eventorSettings.lastEventBuffId] )
+		end
 	end
+	ticketAlert()
 end
 
 function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
-	if Event_is_active then
+
+	if eventIsActive then
 		ticketAlert()
 		GiveThatSweetExpBoost()
 	end
@@ -275,41 +281,40 @@ activePlayerBuffs = {}
 function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
 	if not EVENTEXPBUFFS[abilityId] then return end	-- Not a event buff so -> end
 
+	ticketAlert()
+
 	if (beginTime + 7199 < endTime) then	-- 2h buff is 7200 seconds.
-		Eventor_settings.LastTimeBuffWasGained = os.time()
-		Eventor_settings.LastEventBuffId = abilityId
-		d ( ADDON .. ": EVENT IS ON ")
+		eventorSettings.lastTimeSomeoneGainedEventBuff = os.time()
+		eventorSettings.lastEventBuffId = abilityId
+--		d ( ADDON .. ": EVENT IS ON ")
 	end
 
 	if GetRawUnitName("player") == unitName	then
 		if changeType == EFFECT_RESULT_GAINED then
-			activePlayerBuffs[abilityId] = true
-			d( ADDON .. ": player gained " .. tostring(abilityId) .. "/" .. effectName .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
+			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
+			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
+		--	d( ADDON .. ": player gained " .. tostring(abilityId) .. "/" .. effectName .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
 		elseif changeType == EFFECT_RESULT_UPDATED then
-			activePlayerBuffs[abilityId] = true
-			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed for " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
+			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
+			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
+		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed for " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
 		elseif changeType == EFFECT_RESULT_FADED	then
 			activePlayerBuffs[abilityId] = false
-			d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
-		end
-		if Eventor_settings.KeepEventBuffsOn AND ( (endTime - beginTime) < (Eventor_settings.EventBuffsThreshold * 60) ) then
+			eventorSettings.whenOurEventBuffRunsOut	= os.time() - 1
+		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
 			GiveThatSweetExpBoost(abilityId)
 		end
 	else	-- Someone else is running around with a event buff
-		if (changeType == EFFECT_RESULT_GAINED OR changeType == EFFECT_RESULT_UPDATED) AND NOT activePlayerBuffs[abilityId] then
-			d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. " ".. tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType .. " timeleft: " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
-			if	Eventor_settings.KeepEventBuffsOn  AND
-			( 900 < endTime - beginTime	OR	-- If they got more than 105 mins left of their buff its most likely refreshed today.
-			os.time() < Eventor_settings.LastTimeBuffWasGained + 7200 ) then	-- Its been less than buffs duration since it was last used
-				GiveThatSweetExpBoost(abilityId)
-			end
+		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED) and not activePlayerBuffs[abilityId] then
+		--	d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. " ".. tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType .. " timeleft: " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
+		GiveThatSweetExpBoost(abilityId)
 		end
 	end
 end
 
 -- LAM stuff
 local LAM	= LibAddonMenu2
-local saveData	= Eventor_settings
+local saveData	= eventorSettings
 local panelName	= "Eventor-Panel"
 
 local panelData = {
@@ -332,28 +337,28 @@ local optionsData = {
 			title = nil,	--(optional)
 			text = Eventor.DESCRIPTION,
 			width = "full",	--or "half" (optional)
-	},
+			registerForRefresh = true, --boolean (optional) (will refresh all options controls when a setting is changed and when the panel is shown)
+		},
 	[2] = {
 		type = "divider",
 	},
 	[3] = {
 		type = "checkbox",
 		name = "Refresh event EXP buffs",
-		tooltip = "Last time someon was gained an event exp buff was:" ,
 		default = true,
-		getFunc = function() return Eventor_settings.KeepEventBuffsOn end,
-		setFunc = function(value) Eventor_settings.KeepEventBuffsOn = value end,
+		getFunc = function() return eventorSettings.keepEventBuffsOn end,
+		setFunc = function(value) eventorSettings.keepEventBuffsOn = value end,
 	},
 	[4] = {
 		type = "slider",
 		name = "Threshold in minutes when to refresh event buff",
-		disabled = function() return not Eventor_settings.KeepEventBuffsOn end,
-		tooltip = "If there less minutes left in characters event Exp buff than the given value, the add-on tries to refresh it. Do note that high threshold will result to eradic behavior.",
+		disabled = function() return not eventorSettings.keepEventBuffsOn end,
+		tooltip = "If there less minutes left in characters event Exp buff than the given value, the add-on tries to refresh it.",
 		min = 0,
 		max = 105,	-- 15 mins seems to be the idle check time and we don't want to create anti-idle add-on
-		default = 100,
-		getFunc = function() return Eventor_settings.EventBuffsThreshold end,
-		setFunc = function(value) Eventor_settings.EventBuffsThreshold = value end,
+		default = 60,
+		getFunc = function() return eventorSettings.eventBuffsThreshold end,
+		setFunc = function(value) eventorSettings.eventBuffsThreshold = value end,
 	},
 }
 LAM:RegisterOptionControls(panelName, optionsData)
@@ -364,10 +369,10 @@ function Eventor.Initialize()
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
 
-  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), default)	-- Load event loot history
-	Eventor_settings   = ZO_SavedVars:NewAccountWide("Eventor_settings", 1, GetWorldName(), default)	-- Load settings
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), accountEventLootHistory)	-- Load event loot history
+	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, GetWorldName(), eventorSettings)	-- Load settings
 
---	if Eventor_settings.KeepEventBuffsOn then
+--	if eventorSettings.keepEventBuffsOn then
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
 --	end
 end
@@ -382,4 +387,4 @@ function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
   end
 end
 -- Registering for the add on loading loop
-EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_ADD_ON_LOADED, Eventor.EVENT_ADD_ON_LOADED )
+EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_ADD_ON_LOADED, Eventor.EVENT_ADD_ON_LOADED)
