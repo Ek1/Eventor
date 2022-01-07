@@ -305,7 +305,9 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 			GiveThatSweetExpBoost(abilityId)
 		end
 	else	-- Someone else is running around with a event buff
-		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED) and not activePlayerBuffs[abilityId] then
+		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED)
+		and	beginTime + 7199 < endTime	-- Someone actually gained the buff
+		and	not activePlayerBuffs[abilityId] then
 		--	d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) .. " ".. tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType .. " timeleft: " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
 		GiveThatSweetExpBoost(abilityId)
 		end
