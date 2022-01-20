@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1032.211230",
+	VERSION = "1032.220120",
 	VARIABLEVERSION = "32",
 	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -43,6 +43,10 @@ local EVENTLOOT = {
 	[171268] = 1, -- Glorious Undaunted Reward Box
 	[182317] = 2,	-- Undaunted Reward Box	2021-11-18
 	[182318] = 1, -- Glorious Undaunted Reward Box	2021-11-18
+
+	-- W03	
+	[182599] = 2,	-- Daedric War Spoils
+	[182592] = 1,	-- Glorious Daedric War Spoils
 
 	-- W04 & W29	Midyear Mayhem
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
@@ -281,7 +285,7 @@ activePlayerBuffs = {}
 function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
 	if not EVENTEXPBUFFS[abilityId] then return end	-- Not a event buff so -> end
 
-	ticketAlert()
+--	ticketAlert()
 
 	if (beginTime + 7199 < endTime) then	-- 2h buff is 7200 seconds.
 		eventorSettings.lastTimeSomeoneGainedEventBuff = os.time()
