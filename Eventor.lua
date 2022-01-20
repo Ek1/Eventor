@@ -10,7 +10,7 @@ Eventor = {
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 local eventIsActive = false	-- default is that there is no event on.
 
--- THESE SHOULD BE LOCAL but nice to be not for /zgoo accountEventLootHistory
+-- THESE SHOULD BE LOCAL but nice to have for /zgoo accountEventLootHistory
 accountEventLootHistory = {}
 accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
