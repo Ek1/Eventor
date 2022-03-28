@@ -2,9 +2,9 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1032.220120",
+	VERSION = "1033.220328",
 	VARIABLEVERSION = "32",
-	LIECENSE = "BY-SA = Creative Commons Attribution-ShareAlike 4.0 International License",
+	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
@@ -53,6 +53,9 @@ local EVENTLOOT = {
 	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 	[175563] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 
+	-- W07 Whitestrake's Mayhem
+	[182501] = 2, -- Pelinal's Midyear Boon Box 2021-02-18
+
 	-- W07	Murkmire Celebration
 
 	-- W08	Tribunal Celebration
@@ -64,6 +67,8 @@ local EVENTLOOT = {
 	-- W12	Jester's Festival
 	[171731] = 1,	-- Stupendous Jester's Festival Box
 	[171732] = 2,	-- Jester's Festival Box
+	[183872] = 2,	-- Jester's Festival Box	2022-03-31 +8
+	[183873] = 1,	-- Stupendous Jester's Festival Box	2022-03-31 +8
 
 	-- W13	(4th April) 	Anniversary Jubilee
 	[171779] = 2,	-- 7th Anniversary Jubilee Gift Box
@@ -160,9 +165,9 @@ local EVENTQUESTIDS = {
 }
 
 EVENTEXPBUFFS = {
-	[91369] = 1167, -- Jester's Experience Boost Pie
-	[91449] = 1168, -- Breda's Magnificent Mead
-	[152514] = 9012,	-- 2021 Jubilee cake
+	[91369]	= 1167, -- Jester's Experience Boost Pie
+	[91449]	= 1168, -- Breda's Magnificent Mead
+	[152514]	= 9012,	-- 2021 Jubilee cake
 }
 
 local function ticketAlert()
@@ -318,6 +323,32 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 	end
 end
 
+-- Lets fire up the add-on by registering for events and loading variables
+function Eventor.Initialize()
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
+
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), accountEventLootHistory)	-- Load event loot history
+	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, GetWorldName(), eventorSettings)	-- Load settings
+
+--	if eventorSettings.keepEventBuffsOn then
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
+--	end
+end
+
+-- Here the magic starts
+function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
+  if loadedAddOnName == ADDON then
+		--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
+		EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
+
+		Eventor.Initialize()
+  end
+end
+
+
+
 -- LAM stuff
 local LAM	= LibAddonMenu2
 local saveData	= eventorSettings
@@ -369,28 +400,5 @@ local optionsData = {
 }
 LAM:RegisterOptionControls(panelName, optionsData)
 
--- Lets fire up the add-on by registering for events and loading variables
-function Eventor.Initialize()
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
-
-  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, GetWorldName(), accountEventLootHistory)	-- Load event loot history
-	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, GetWorldName(), eventorSettings)	-- Load settings
-
---	if eventorSettings.keepEventBuffsOn then
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
---	end
-end
-
--- Here the magic starts
-function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
-  if loadedAddOnName == ADDON then
-		--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
-		EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
-
-		Eventor.Initialize()
-  end
-end
 -- Registering for the add on loading loop
 EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_ADD_ON_LOADED, Eventor.EVENT_ADD_ON_LOADED)
