@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1033.220328",
+	VERSION = "1033.220401.0420",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -30,10 +30,9 @@ local eventorSettings = {	-- default settings
 local alarmsRemaining = eventorSettings.alarmAnnoyance or 9999
 
 local dailysReseted = os.time() + GetTimedActivityTimeRemainingSeconds(2) - 86400	-- 24h*60min*60sec = 86400 seconds
-
-local todaysDate = tonumber(os.date("%Y%m%d"))	-- Aikaa seuraavaan daily resettii GetTimedActivityTimeRemainingSeconds(2) 
-local todaysYear = tonumber(os.date("%Y"))
-local _, _, delay = GetFenceLaunderTransactionInfo()
+local todaysYear = tonumber(os.date("%Y", dailysReseted))
+local todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
+-- local _, _, delay = GetFenceLaunderTransactionInfo()
 
 local EVENTLOOT = {
 	-- W03	Undaunted Celebration
@@ -202,12 +201,11 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 
-			if dailysReseted <= os.time() + 86400	then	-- 24h*60min*60sec = 86400 seconds
-				dailysReseted = os.time() + GetTimedActivityTimeRemainingSeconds(2) - 86400	-- 24h*60min*60sec = 86400 seconds
+			if dailysReseted + 86400 <= os.time() then	-- if playing past the reset time the reset time needs to be refreshed
+				dailysReseted = os.time() + GetTimedActivityTimeRemainingSeconds(2) - 86400
+				todaysYear = tonumber(os.date("%Y", dailysReseted))
+				todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 			end
-
-			todaysYear = tonumber(os.date("%Y", dailysReseted))
-			todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 
 			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
 				accountEventLootHistory[itemId] = {}	-- if not, create one
