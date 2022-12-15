@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1036.221117",
+	VERSION = "1036.221216",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -325,17 +325,29 @@ local EVENTLOOT = {
 
 	-- w50	New Life Festival
 	[96390] = 2,	-- 16	New Life Festival Box
-	[133557] = 2,	-- 17	New Life Festival Box
+	[133557] = 2,	-- 17	New Life Festival Box.
 	[141823] = 2,	-- 18	New Life Festival Box
 	[159463] = 1,	-- 19	Stupendous Jester's Festival Box
 	[156779] = 2,	-- 19	New Life Festival Box
 	[171731] = 1,	-- 20	Stupendous Jester's Festival Box
 	[171327] = 2,	-- 20	New Life Festival Box
 	[182494] = 2,	-- 21	New Life Festival Box
+	[182494] = 2,	-- 21	New Life Festival Box
+	[183873] = 1,	-- 21	Stupendous Jester's Festival Box
+	[192368] = 2,	-- 22	New Life Festival Box
 }
 
 local EVENTQUESTIDS = {
 	[6695] = 1, -- Witches Festival: Plucking the Crow
+
+	--	Jester's Festival
+	[5921] = 1,	-- Springtime Flair
+	[5931] = 1,	-- A Noble Guest
+	[5937] = 1,	-- Royal Revelry
+	[5941] = 1,	-- The Jester's Festival
+	[6622] = 1,	-- A Foe Most Porcine
+	[6632] = 1,	-- The King's Spoils
+	[6640] = 1,	-- Prankster's Carnival
 
 	--	The New Life Festival
 	[5811] = 1,	-- Snow Bear Plunge
@@ -348,15 +360,6 @@ local EVENTQUESTIDS = {
 	[5856] = 1,	-- Stonetooth Bash
 	[6134] = 1,	-- The New Life Festival
 	[6588] = 1,	-- Old Life Observance
-
-	--	Jester's Festival
-	[5921] = 1,	-- Springtime Flair
-	[5931] = 1,	-- A Noble Guest
-	[5937] = 1,	-- Royal Revelry
-	[5941] = 1,	-- The Jester's Festival
-	[6622] = 1,	-- A Foe Most Porcine
-	[6632] = 1,	-- The King's Spoils
-	[6640] = 1,	-- Prankster's Carnival
 }
 
 EVENTEXPBUFFS = {
@@ -496,15 +499,15 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 	if (beginTime + 7190 < endTime) then	-- 2h buff is 7200 seconds and logout takes 10 seconds.
 		eventorSettings.lastTimeSomeoneGainedEventBuff = os.time()
 		eventorSettings.lastEventBuffId = abilityId
-		d ( ADDON .. ": " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " was gained by " .. unitName)
+--		d ( ADDON .. ": " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " was gained by " .. unitName)
 	end
 
 	if unitTag == "player"	then
 		if changeType == EFFECT_RESULT_GAINED then	-- Player got an event buff
 			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
 			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
-			d( ADDON .. ": " .. unitName .. " gained " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
---
+--			d( ADDON .. ": " .. unitName .. " gained " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
+
 		elseif changeType == EFFECT_RESULT_UPDATED then	-- Player event buff for refreshed
 			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
 			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
