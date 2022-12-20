@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1036.221216",
+	VERSION = "1036.221220",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -26,9 +26,10 @@ local eventorSettings = {	-- default settings
 }
 
 local alarmsRemaining = eventorSettings.alarmAnnoyance or 9999
-local dailysReseted = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(0) - 86400	-- 24h*60min*60sec = 86400 seconds
+local dailysReseted = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY) - 86400	-- 24h*60min*60sec = 86400 seconds
+local dailysReset = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)
 -- if timedActivityId 
---/script d (  ZO_FormatTimeLargestTwo( GetTimedActivityTimeRemainingSeconds(4)  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
+--/script d (  ZO_FormatTimeLargestTwo( TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
 local todaysYear = tonumber(os.date("%Y", dailysReseted))
 local todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 -- local _, _, delay = GetFenceLaunderTransactionInfo()
@@ -341,24 +342,24 @@ local EVENTQUESTIDS = {
 	[6695] = 1, -- Witches Festival: Plucking the Crow
 
 	--	Jester's Festival
-	[5921] = 1,	-- Springtime Flair
-	[5931] = 1,	-- A Noble Guest
-	[5937] = 1,	-- Royal Revelry
 	[5941] = 1,	-- The Jester's Festival
-	[6622] = 1,	-- A Foe Most Porcine
-	[6632] = 1,	-- The King's Spoils
-	[6640] = 1,	-- Prankster's Carnival
+		[5921] = 1,	-- Springtime Flair
+		[5931] = 1,	-- A Noble Guest
+		[5937] = 1,	-- Royal Revelry
+		[6622] = 1,	-- A Foe Most Porcine
+		[6632] = 1,	-- The King's Spoils
+		[6640] = 1,	-- Prankster's Carnival
 
 	--	The New Life Festival
-	[5811] = 1,	-- Snow Bear Plunge
-	[5835] = 1,	-- The Trial of Five-Clawed Guile
-	[5837] = 1,	-- Lava Foot Stomp
-	[5838] = 1,	-- Mud Ball Merriment
-	[5839] = 1,	-- Signal Fire Sprint
-	[5845] = 1,	-- Castle Charm Challenge
-	[5855] = 1,	-- Fish Boon Feast
-	[5856] = 1,	-- Stonetooth Bash
 	[6134] = 1,	-- The New Life Festival
+		[5811] = 1,	-- Snow Bear Plunge
+		[5835] = 1,	-- The Trial of Five-Clawed Guile
+		[5837] = 1,	-- Lava Foot Stomp
+		[5838] = 1,	-- Mud Ball Merriment
+		[5839] = 1,	-- Signal Fire Sprint
+		[5845] = 1,	-- Castle Charm Challenge
+		[5855] = 1,	-- Fish Boon Feast
+		[5856] = 1,	-- Stonetooth Bash
 	[6588] = 1,	-- Old Life Observance
 }
 
@@ -402,8 +403,9 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 
-			if dailysReseted + 86400 <= os.time() then	-- if playing past the reset time the reset time needs to be refreshed
-				dailysReseted = os.time() + GetTimedActivityTimeRemainingSeconds(4) - 86400
+			if dailysReset <= os.time() then	-- if playing past the reset time the reset time needs to be refreshed
+				dailysReseted = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY) - 86400	-- 24h*60min*60sec = 86400 seconds
+				dailysReset = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)
 				todaysYear = tonumber(os.date("%Y", dailysReseted))
 				todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 			end
@@ -428,6 +430,7 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 				accountEventLootHistory[itemId][-1] = os.time()	-- when the latest one was picked up
 				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][0]) )
 			end
+
 			accountEventLootHistory[0] = (accountEventLootHistory[0] or 0) + 1	-- increase over all counter by one
 		end
 	end
