@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1036.221220",
+	VERSION = "1036.230124",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -213,7 +213,7 @@ local EVENTLOOT = {
 	[190267] = 2, --	Undaunted Box: White-Gold Tower
 
 
-	-- W03	
+	-- W03
 	[182599] = 2,	-- Daedric War Spoils
 	[182592] = 1,	-- Glorious Daedric War Spoils
 
@@ -221,6 +221,10 @@ local EVENTLOOT = {
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
 	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 	[175563] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
+
+	--	W4 Season of the Dragon celebration
+	[193734] = 1, -- Glorious Elsweyr Coffer	2023-01-26
+	[193735] = 2, -- Elsweyr Coffer						2023-01-26
 
 	-- W07 Whitestrake's Mayhem
 	[182501] = 2, -- Pelinal's Midyear Boon Box 2021-02-18
@@ -539,6 +543,8 @@ function Eventor.Initialize()
 
   accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	-- Load event loot history
 	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	-- Load settings
+
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
 
 --	if eventorSettings.keepEventBuffsOn then
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
