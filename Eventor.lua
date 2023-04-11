@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1036.230124",
+	VERSION = "1037.230411.1",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -240,12 +240,15 @@ local EVENTLOOT = {
 	-- W12	Jester's Festival
 	[171731] = 1,	-- Stupendous Jester's Festival Box
 	[171732] = 2,	-- Jester's Festival Box
-	[183872] = 2,	-- Jester's Festival Box	2022-03-31 +8
 	[183873] = 1,	-- Stupendous Jester's Festival Box	2022-03-31 +8
+	[183872] = 2,	-- Jester's Festival Box	2022-03-31 +8
+	[194412] = 1,	-- Stupendous Jester's Festival Box	2022-03-29 +9
+	[194414] = 2,	-- Jester's Festival Box	2022-03-29 +9
 
 	-- W13	(4th April) 	Anniversary Jubilee
 	[171779] = 2,	-- 7th Anniversary Jubilee Gift Box	21-04-01 +14
 	[183890] = 2,	-- 8th Anniversary Jubilee Gift Box	22-04-07 +12
+	[194428] = 2,	-- 9th Anniversary Jubilee Gift Box	23-04-05 +13
 
 	-- W18	Vampire Week
 
@@ -368,11 +371,13 @@ local EVENTQUESTIDS = {
 }
 
 EVENTEXPBUFFS = {
+--	number of the buff and what gives it
 	[91369]	= 1167, -- Jester's Experience Boost Pie
 	[91449]	= 1168, -- Breda's Magnificent Mead
 	[96118]	= 479,	-- Withcmother's Boon -> Witchmother's Whistle
 	[152514]	= 9012,	-- 2021 Jubilee cake
 	[167846]	= 10287,	-- 2022 Jubilee cake
+	[181478]	= 11089,	-- 2023 Jubilee cake
 }
 
 local function ticketAlert()
@@ -515,7 +520,7 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
 --			d( ADDON .. ": " .. unitName .. " gained " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
 
-		elseif changeType == EFFECT_RESULT_UPDATED then	-- Player event buff for refreshed
+		elseif changeType == EFFECT_RESULT_UPDATED then	-- Player event buff got refreshed
 			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
 			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
 		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed for " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
@@ -525,12 +530,12 @@ function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectNam
 		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
 			GiveThatSweetExpBoost(abilityId)
 		end
-	else	-- Someone else gained a event buff
+	else	-- Someone else gained an event buff
 		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED)
 		and	beginTime + 7190 < endTime	-- 2h buff is 7200 seconds and logout takes 10 seconds.
 		and	not activePlayerBuffs[abilityId] then	-- Player is missing the buff and someone else actually got a new buff.
 --			d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) ..  tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType .. " timeleft: " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
-		GiveThatSweetExpBoost(abilityId)
+			GiveThatSweetExpBoost(abilityId)
 		end
 	end
 end
@@ -541,10 +546,10 @@ function Eventor.Initialize()
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
 
-  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	-- Load event loot history
-	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	-- Load settings
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	or {}-- Load event loot history
+	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	or eventorSettings -- Load settings
 
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
+--	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
 
 --	if eventorSettings.keepEventBuffsOn then
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
