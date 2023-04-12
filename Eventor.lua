@@ -556,17 +556,6 @@ function Eventor.Initialize()
 --	end
 end
 
--- Here the magic starts
-function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
-  if loadedAddOnName == ADDON then
-		--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
-		EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
-
-		Eventor.Initialize()
-  end
-end
-
-
 -- LAM stuff
 local LAM	= LibAddonMenu2
 local saveData	= eventorSettings
@@ -617,6 +606,16 @@ local optionsData = {
 	},
 }
 LAM:RegisterOptionControls(panelName, optionsData)
+
+-- Here the magic starts
+function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
+  if loadedAddOnName == ADDON then
+		--	Seems it is our time to shine so lets stop listening load trigger, load saved variables and initialize the add-on
+		EVENT_MANAGER:UnregisterForEvent(ADDON, EVENT_ADD_ON_LOADED)
+
+		Eventor.Initialize()
+  end
+end
 
 -- Registering for the add on loading loop
 EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_ADD_ON_LOADED, Eventor.EVENT_ADD_ON_LOADED)
