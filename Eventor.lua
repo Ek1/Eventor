@@ -2,17 +2,13 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1039.230928",
+	VERSION = "1041.240405",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
 }
 local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview friendly.
 local eventIsActive = false	-- default is that there is no event on.
-
--- THESE SHOULD BE LOCAL but nice to have for /zgoo accountEventLootHistory
-accountEventLootHistory = {}
-accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local eventorSettings = {	-- default settings
 	ticketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
@@ -33,6 +29,10 @@ local dailysReset = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTim
 local todaysYear = tonumber(os.date("%Y", dailysReseted))
 local todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 -- local _, _, delay = GetFenceLaunderTransactionInfo()
+
+-- THESE SHOULD BE LOCAL but nice to have for /zgoo accountEventLootHistory
+accountEventLootHistory = {}
+accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
 local EVENTLOOT = {
 	-- W03 or W36	Undaunted Celebration
@@ -243,7 +243,22 @@ local EVENTLOOT = {
 	[171480] = 1,	-- Glorious Tribunal Coffer
 
 	-- W09	Thieves Guild and Dark Brotherhood Celebration
+	[203809] = 1,	-- Glorious Orsinium Coffer	2024-01-19 +26
+	[203810] = 2,	-- Orsinium Coffer	2024-01-19 +26
+	[203811] = 1,	-- Glorious Thieves Guild Coffer	2024-01-19 +26
+	[203812] = 2,	-- Thieves Guild Coffer	2024-01-19 +26
+	[203813] = 1,	-- Glorious Dark Brotherhood Coffer	2024-01-19 +26
+	[203814] = 2,	-- Dark Brotherhood Coffer	2024-01-19 +26
+	[203815] = 1,	-- Glorious Maelstrom Arena Coffer	2024-01-19 +26
+	[203816] = 2,	-- Maelstrom Arena Coffer	2024-01-19 +26
+	[203817] = 1,	-- Glorious Imperial Prison Coffer	2024-01-19 +26
+	[203819] = 2,	-- Imperial Prison Coffer	2024-01-19 +26
+	[203820] = 1,	-- Glorious White-Gold Tower Coffer	2024-01-19 +26
+	[203821] = 2,	-- White-Gold Tower Coffer	2024-01-19 +26
+	[203822] = 1,	-- Glorious Imperial City Coffer 2024-01-19 +26
+	[203823] = 2,	-- Imperial City Coffer	2024-01-19 +26
 
+	
 	-- W12	Jester's Festival
 	[171731] = 1,	-- Stupendous Jester's Festival Box
 	[171732] = 2,	-- Jester's Festival Box
@@ -343,6 +358,17 @@ local EVENTLOOT = {
 	[193761] = 2, --	22 Box of Gray Host Pillage
 	[193762] = 1, --	22 Glorious Box of Gray Host Pillage
 
+	-- W46	Gates of Oblivion Celebration
+	[203568] = 1, --	23 Blackwood Coffer
+	[203569] = 1, --	23 Fargrave Coffer
+	[203566] = 2, --	23 Glorious Blackwood Coffer
+	[203567] = 2, --	23 Glorious Fargrave Coffer
+
+	[203171] = 1, --	23 Dread Cellar Coffer
+	[203172] = 1, --	23 Red Petal Bastion Coffer
+	[203173] = 1, --	23 Black Drake Villa Coffer
+	[203174] = 1, --	23 The Cauldron Coffer
+
 	-- w50	New Life Festival
 	[96390] = 2,	-- 16	New Life Festival Box
 	[133557] = 2,	-- 17	New Life Festival Box.
@@ -431,28 +457,34 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 				todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 			end
 
-			if not accountEventLootHistory[itemId] then	-- Does itemId loot have a table
-				accountEventLootHistory[itemId] = {}	-- if not, create one
-				accountEventLootHistory[itemId][0] = 0	-- Keeps track how many boxes in total this year of the itemId
+			if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
+				accountEventLootHistory[todaysYear] = {}	-- if not, create one
+			end
+			if not accountEventLootHistory[todaysYear][itemId] then	-- Does itemId have table in this years loot table
+				accountEventLootHistory[todaysYear][itemId] = {}	-- if not, create one
+				accountEventLootHistory[todaysYear][itemId][0] = 0	-- How many looted this year
 				d( ADDON .. ": creating table for " .. itemName)
 			end
-			accountEventLootHistory[itemId][0] = (accountEventLootHistory[itemId][0] or 0) + 1	-- increase this years loot counter by one
 
-			if not accountEventLootHistory[itemId][todaysDate] then	-- Is this itemId's first entry for this date?
-				accountEventLootHistory[itemId][todaysDate] = 0	-- if not, create one
+			accountEventLootHistory[todaysYear][itemId][0] = 1 + (accountEventLootHistory[todaysYear][itemId][0] or 0)	-- increase this years loot counter by one
+
+			if not accountEventLootHistory[todaysYear][itemId][todaysDate] then	-- Is this itemId's first entry for this date?
+				accountEventLootHistory[todaysYear][itemId][todaysDate] = 0	-- if not, create one
 				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. itemName .. " table")
 			end
 
 			if EVENTLOOT[itemId] == 1 then	-- The item has drop rate of once per day so instead of increasing the date time store the time stamp
-				accountEventLootHistory[itemId][todaysDate] = os.time()	-- timestamp to store.
-				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%H:%M:%S") .. " and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][0]) )
+				accountEventLootHistory[todaysYear][itemId][todaysDate] = os.time()	-- timestamp to store.
+				accountEventLootHistory[todaysYear][1] = 1 + (accountEventLootHistory[todaysYear][1] or 0)	-- Counter for how many daily/glorious boxes collected this year or set it to one.
+				d( ADDON .. ": " .. itemName .. " looted today at " .. os.date("%H:%M:%S") .. " and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[todaysYear][itemId][0]) )
 			else
-				accountEventLootHistory[itemId][todaysDate] = (accountEventLootHistory[itemId][todaysDate] or 0) + 1	-- increase todays counter by one
-				accountEventLootHistory[itemId][-1] = os.time()	-- when the latest one was picked up
-				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[itemId][0]) )
+				accountEventLootHistory[todaysYear][itemId][todaysDate] = 1 + (accountEventLootHistory[todaysYear][itemId][todaysDate] or 0)	-- increase todays counter by one or set it to one
+				accountEventLootHistory[todaysYear][itemId][-1] = os.time()	-- when the latest one was picked up
+				accountEventLootHistory[todaysYear][2] = 1 + (accountEventLootHistory[todaysYear][2] or 0)	-- Counter for how many repeatable/purple boxes collected this year.
+				d( ADDON .. ": " .. zo_strformat("<<i:1>>", accountEventLootHistory[todaysYear][itemId][todaysDate]) .. " ".. itemName .. " today and it was " .. zo_strformat("<<i:1>>", accountEventLootHistory[todaysYear][itemId][0]) )
 			end
 
-			accountEventLootHistory[0] = (accountEventLootHistory[0] or 0) + 1	-- increase over all counter by one
+			accountEventLootHistory[0] = 1 + (accountEventLootHistory[0] or 0)	-- increase over all counter by one or set it to one
 		end
 	end
 end
@@ -509,7 +541,6 @@ function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIs
 
 	if eventIsActive then
 		ticketAlert()
-		GiveThatSweetExpBoost()
 	end
 end
 
@@ -559,6 +590,9 @@ function Eventor.Initialize()
 	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
 
   accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	or {}-- Load event loot history
+	if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
+		accountEventLootHistory[todaysYear] = {}	-- if not, create one
+	end
 	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	or eventorSettings -- Load settings
 
 --	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
@@ -597,24 +631,6 @@ local optionsData = {
 		},
 	[2] = {
 		type = "divider",
-	},
-	[3] = {
-		type = "checkbox",
-		name = "Refresh event EXP buffs",
-		default = true,
-		getFunc = function() return eventorSettings.keepEventBuffsOn end,
-		setFunc = function(value) eventorSettings.keepEventBuffsOn = value end,
-	},
-	[4] = {
-		type = "slider",
-		name = "Threshold in minutes when to refresh event buff",
-		disabled = function() return not eventorSettings.keepEventBuffsOn end,
-		tooltip = "If there less minutes left in characters event Exp buff than the given value, the add-on tries to refresh it.",
-		min = 0,
-		max = 105,	-- 15 mins seems to be the idle check time and we don't want to create anti-idle add-on
-		default = 60,
-		getFunc = function() return eventorSettings.eventBuffsThreshold end,
-		setFunc = function(value) eventorSettings.eventBuffsThreshold = value end,
 	},
 }
 LAM:RegisterOptionControls(panelName, optionsData)
