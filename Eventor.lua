@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1041.240405",
+	VERSION = "1043.240926",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -219,6 +219,16 @@ local EVENTLOOT = {
 	[198593] = 2,    -- Undaunted Box: Veteran Scrivener's Hall
 	[198594] = 2,    -- Undaunted Box: Bal Sunnar
 	[198595] = 2,    -- Undaunted Box: Scrivener's Hall
+	-- 
+	[211107] = 2,    -- 2024W37 Glorious Undaunted Box: Veteran Bedlam Veil		
+	[211108] = 2,    -- 2024W37 Glorious Undaunted Box: Veteran Oathsworn Pit		
+	[211109] = 2,    -- 2024W37 Glorious Undaunted Box: Bedlam Veil		
+	[211110] = 2,    -- 2024W37 Glorious Undaunted Box: Oathsworn Pit		
+	[211111] = 1,    -- 2024W37 Undaunted Box: Veteran Bedlam Veil		
+	[211112] = 1,    -- 2024W37 Undaunted Box: Veteran Oathsworn Pit		
+	[211113] = 1,    -- 2024W37 Undaunted Box: Bedlam Veil		
+	[211114] = 1,    -- 2024W37 Undaunted Box: Oathsworn Pit
+
 
 	-- W03
 	[182599] = 2,	-- Daedric War Spoils
@@ -270,7 +280,8 @@ local EVENTLOOT = {
 	-- W13	(4th April) 	Anniversary Jubilee
 	[171779] = 2,	-- 7th Anniversary Jubilee Gift Box	21-04-01 +14
 	[183890] = 2,	-- 8th Anniversary Jubilee Gift Box	22-04-07 +12
-	[194428] = 2,	-- 9th Anniversary Jubilee Gift Box	23-04-05 +13
+	[194428] = 2,	-- 9th- Anniversary Jubilee Gift Box	23-04-05 +13
+	[204459] = 1,	-- 10th Glorious Anniversary Jubilee Gift Box Box	24-04-05 +13
 
 	-- W18	Vampire Week
 
@@ -294,18 +305,20 @@ local EVENTLOOT = {
 	-- W38	Lost treasures of Skyrim
   [167227] = 1,	-- Bulging Box of Gray Host Pillage	2020
 	[167226] = 2,	-- Box of Gray Host Pillage	2020
-
 	-- W39	Lost treasures of Skyrim
 	[181433] = 1,	-- 20	Glorious Blackwood Legates' Coffer
 	[178723] = 2,	-- 20	Blackwood Legates' Coffer
-
 	-- W39	Heroes of High Isle
 	[190059] = 1,	-- 22	Society of the Steadfast's Largesse
 	[190058] = 2,	-- 22	Society of the Steadfast's Munificence
 
 	-- W39'23	Secret Telvanni Coffers
 	[199050] = 1,	-- 22	Sublime Secret Telvanni Coffer
-	[199051] = 2,	-- 23	Secret Telvanni Coffer 
+	[199051] = 2,	-- 23	Secret Telvanni Coffer
+
+	-- W39'24	Fallen Leaves of West Weald
+	[211177] = 1,	-- 24	Sublime Fallen Leaves Coffer
+	[211178] = 2,	-- 24	Fallen Leaves Coffer
 
 	-- W42	Witches Festival
 	[84521] = 2,	-- 16	Plunder Skull
