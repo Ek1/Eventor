@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1044.241027",
+	VERSION = "1044.241121",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -378,11 +378,14 @@ local EVENTLOOT = {
 	[203569] = 1, --	23 Fargrave Coffer
 	[203566] = 2, --	23 Glorious Blackwood Coffer
 	[203567] = 2, --	23 Glorious Fargrave Coffer
-
 	[203171] = 1, --	23 Dread Cellar Coffer
 	[203172] = 1, --	23 Red Petal Bastion Coffer
 	[203173] = 1, --	23 Black Drake Villa Coffer
 	[203174] = 1, --	23 The Cauldron Coffer
+
+	-- W47	Legacy of the Bretons Celebration
+	[212163] = 2,	-- 24	Glorious High Isle Coffer
+	[212164] = 1,	-- 24	High Isle Coffer
 
 	-- w50	New Life Festival
 	[96390] = 2,	-- 16	New Life Festival Box
