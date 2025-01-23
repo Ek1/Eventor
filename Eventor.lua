@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1044.241202",
+	VERSION = "1044.250123",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -242,6 +242,10 @@ local EVENTLOOT = {
 	--	W4 Season of the Dragon celebration
 	[193734] = 1, -- Glorious Elsweyr Coffer	2023-01-26
 	[193735] = 2, -- Elsweyr Coffer						2023-01-26
+
+	-- W4 Pan-Tamriel Celebration
+	[212211] = 1, -- Glorious Pan-Tamriel Reward Box x8	2024-01-23
+	[212212] = 2, -- Pan-Tamriel Reward Box							2024-01-23
 
 	-- W07 Whitestrake's Mayhem
 	[182501] = 2, -- Pelinal's Midyear Boon Box 2021-02-18
