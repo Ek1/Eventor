@@ -2,7 +2,7 @@ Eventor = {
 	TITLE = "Eventor - Events Spam Online",	-- Not codereview friendly but enduser friendly version of the add-on's name
 	AUTHOR = "Ek1",
 	DESCRIPTION = "One stop event add-on about the numerous ticket giving ESO events to keep track what you have done, how many and when. Keeps up your exp buff too. Also warns if you can't fit any more tickets.",
-	VERSION = "1044.250123",
+	VERSION = "1049.260409.1",
 	VARIABLEVERSION = "32",
 	LIECENSE = "CC BY-SA 4.0 = Creative Commons Attribution-ShareAlike 4.0 International License",
 	URL = "https://github.com/Ek1/Eventor",
@@ -11,8 +11,8 @@ local ADDON = "Eventor"	-- Variable used to refer to this add-on. Codereview fri
 local eventIsActive = false	-- default is that there is no event on.
 
 local eventorSettings = {	-- default settings
-	ticketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
-	alarmAnnoyance	= 99999,	-- How many times user is reminded
+--	ticketThresholdAlarm =  GetMaxPossibleCurrency(CURT_EVENT_TICKETS, CURRENCY_LOCATION_ACCOUNT) - 3,	-- 3 has been maximum reward of tickets this far
+--	alarmAnnoyance	= 99999,	-- How many times user is reminded
 	longestEvent	= 35,	-- Longest known event this far in days
 	keepEventBuffsOn = true,
 	eventBuffsThreshold = 60,
@@ -20,20 +20,29 @@ local eventorSettings = {	-- default settings
 	lastTimeEventLootWasGained = 1640820402,
 	whenOurEventBuffRunsOut = 1618495200,
 }
-
+-- zo_round((GetTimeStamp() + LDRT.GetSecondsUntilNextDailyReset()) / 60) * 60
 local alarmsRemaining = eventorSettings.alarmAnnoyance or 9999
-local dailysReseted = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY) - 86400	-- 24h*60min*60sec = 86400 seconds
-local dailysReset = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)
--- if timedActivityId 
---/script d (  ZO_FormatTimeLargestTwo( TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
+local nextDailyReset =  math.floor( (GetTimeStamp() + GetTimeUntilNextDailyLoginRewardClaimS() + 30) / 60) * 60
+local dailysReseted = nextDailyReset - 86400	-- 24h*60min*60sec = 86400 seconds
+local dailysReset = nextDailyReset
+-- /script d (  ZO_FormatTimeLargestTwo( GetTimeUntilNextDailyLoginRewardClaimS()  , TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
 local todaysYear = tonumber(os.date("%Y", dailysReseted))
 local todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
 -- local _, _, delay = GetFenceLaunderTransactionInfo()
 
+local function updateDailyTimes()
+	dailysReseted = math.floor( (GetTimeStamp() + GetTimeUntilNextDailyLoginRewardClaimS() + 30) / 60) * 60 - 86400	-- 24h*60min*60sec = 86400 seconds
+	dailysReset = math.floor( (GetTimeStamp() + GetTimeUntilNextDailyLoginRewardClaimS() + 30) / 60) * 60
+	todaysYear = tonumber(os.date("%Y", dailysReseted))
+	todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
+end
+
 -- THESE SHOULD BE LOCAL but nice to have for /zgoo accountEventLootHistory
 accountEventLootHistory = {}
-accountEventLootHistory[CURT_EVENT_TICKETS] = {}
+-- accountEventLootHistory[CURT_EVENT_TICKETS] = {}
 
+-- Good site to check the IDs https://esoitem.uesp.net/viewlog.php
+-- Note that adding new containers to old events stopped at 2022 and the containers loot table were updated instead
 local EVENTLOOT = {
 	-- W03 or W36	Undaunted Celebration
 	[156679] = 2,	-- Undaunted Reward Box
@@ -238,19 +247,21 @@ local EVENTLOOT = {
 	[121526] = 2,	-- Pelinal's Midyear Boon Box
 	[171535] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
 	[175563] = 2, -- Pelinal's Midyear Boon Box 2021-01-28
+	[192612] = 2, -- 26 Pelinal's Boon Box
 
 	--	W4 Season of the Dragon celebration
 	[193734] = 1, -- Glorious Elsweyr Coffer	2023-01-26
 	[193735] = 2, -- Elsweyr Coffer						2023-01-26
 
-	-- W4 Pan-Tamriel Celebration
-	[212211] = 1, -- Glorious Pan-Tamriel Reward Box x8	2024-01-23
-	[212212] = 2, -- Pan-Tamriel Reward Box							2024-01-23
-
 	-- W07 Whitestrake's Mayhem
 	[182501] = 2, -- Pelinal's Midyear Boon Box 2021-02-18
 
 	-- W07	Murkmire Celebration
+
+	-- W07	Hearts Week
+	[223678] = 1, -- 26 Mara's Extravagant Parcel
+	[223679] = 2, -- 26 Mara's Delectable Parcel
+	[223680] = 2, -- 26 Mara's Piquant Parcel
 
 	-- W08	Tribunal Celebration
 	[171476] = 2,	-- Tribunal Coffer
@@ -371,7 +382,20 @@ local EVENTLOOT = {
 	[211125] = 1, --	24 Dremora Plunder Skull, Lord Hollowjack
 	[211126] = 1, --	24 Dremora Plunder Skull, Infinite Archive
 
-	-- W46	Dark Heart of Skyrim Celebration
+	--	W42 Writting wall
+	[219781] = 1, --	25 Glorious Writhing Rewards Coffer
+	[219791] = 2, --	25 Glorious Writhing Alchemy Reward Coffer
+	[219792] = 2, --	25 Writhing Alchemy Reward Coffer
+	[219793] = 1, --	25 Glorious Writhing Blacksmith Reward Coffer
+	[219794] = 2, --	25 Writhing Clothier Reward Coffer
+	[219795] = 1, --	25 Glorious Writhing Clothier Reward Coffer
+	[219796] = 2, --	25 Writhing Provisioning Reward Coffer
+	[219797] = 1, --	25 Glorious Writhing Provisioning Reward Coffer
+	[219798] = 2, --	25 Writhing Clothier Reward Coffer
+	[219799] = 1, --	25 Glorious Writhing Woodworking Reward Coffer
+	[219800] = 2, --	25 Writhing Woodworking Reward Coffer
+
+-- W46	Dark Heart of Skyrim Celebration
 	[167226] = 2, --	21 Box of Gray Host Pillage
 	[167227] = 1, --	21 Bulging Box of Gray Host Pillage
 	[193761] = 2, --	22 Box of Gray Host Pillage
@@ -411,13 +435,14 @@ local EVENTQUESTIDS = {
 	[6695] = 1, -- Witches Festival: Plucking the Crow
 
 	--	Jester's Festival
-	[5941] = 1,	-- The Jester's Festival
-		[5921] = 1,	-- Springtime Flair
-		[5931] = 1,	-- A Noble Guest
-		[5937] = 1,	-- Royal Revelry
-		[6622] = 1,	-- A Foe Most Porcine
-		[6632] = 1,	-- The King's Spoils
-		[6640] = 1,	-- Prankster's Carnival
+	[5941] = 1,	-- 17 The Jester's Festival  also gained through Crown store/Quest starters/Events
+		[5921] = 1,	-- 17 Springtime Flair
+		[5931] = 1,	-- 17 A Noble Guest
+		[5937] = 1,	-- 17 Royal Revelry
+		[6622] = 1,	-- 21 A Foe Most Porcine
+		[6632] = 1,	-- 21 The King's Spoils
+		[6640] = 1,	-- 21 Prankster's Carnival
+		[6722] = 1,	-- 22 Getting the Band Together
 
 	--	The New Life Festival
 	[6134] = 1,	-- The New Life Festival
@@ -429,11 +454,21 @@ local EVENTQUESTIDS = {
 		[5845] = 1,	-- Castle Charm Challenge
 		[5855] = 1,	-- Fish Boon Feast
 		[5856] = 1,	-- Stonetooth Bash
-	[6588] = 1,	-- Old Life Observance
+		[6588] = 1,	-- Old Life Observance
+		[5779] = 1, -- 25	Icy Intrigue
+		[7334] = 1, -- 25	Cold War
+		[7346] = 1, -- 25	Food for New Life
+		[7355] = 1, -- 25	The Dragon's Hoard
+		[7361] = 1, -- 25	The Hunt for Dakoi
+		[7362] = 1, -- 25	The Mudman
+		[7364] = 1, -- 25	Betnihk's Boon
+		[7365] = 1, -- 25	The Judgment of Garth
+		[7366] = 1, -- 25	The Desert and the Sea
 }
 
-EVENTEXPBUFFS = {
+--	Deprecated, all EXP buffs are global and granted behind the scenes
 --	number of the buff and what gives it
+local EVENTEXPBUFFS = {
 	[91369]	= 1167, -- Jester's Experience Boost Pie
 	[91449]	= 1168, -- Breda's Magnificent Mead
 	[96118]	= 479,	-- Withcmother's Boon -> Witchmother's Whistle
@@ -447,10 +482,10 @@ local function ticketAlert()
 	if 0 < alarmsRemaining and 9 < GetCurrencyAmount(CURT_EVENT_TICKETS, 3)	then
 		d (ADDON .. ": " .. GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
 
-		local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
-		messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
-		messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
-		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
+	--	local messageParams = CENTER_SCREEN_ANNOUNCE:CreateMessageParams(CSA_CATEGORY_MAJOR_TEXT, SOUNDS.NONE)
+--		messageParams:SetCSAType(CENTER_SCREEN_ANNOUNCE_TYPE_COUNTDOWN)
+--		messageParams:SetText( GetCurrencyAmount(9, 3) .. "/" .. ZO_Currency_FormatPlatform(CURT_EVENT_TICKETS, GetMaxPossibleCurrency(9, 3), ZO_CURRENCY_FORMAT_AMOUNT_ICON) )
+--		CENTER_SCREEN_ANNOUNCE:DisplayMessage(messageParams)
 	end
 
 	alarmsRemaining = alarmsRemaining - 1
@@ -466,24 +501,15 @@ function Eventor.lootedEventBox(eventCode, receivedBy, itemName, quantity, ItemU
 --	d( ADDON .. ": looted " .. itemName .. "(" .. itemId .. ")")
 
 	if EVENTLOOT[itemId] then	-- Only intrested about event items
---		d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
-
+--	d( ADDON .. ": and it was found in EVENTLOOT[itemId] ")
 		eventorSettings.lastTimeEventLootWasGained = os.time()
 		eventIsActive = true
-		ticketAlert()
+
+		if dailysReset <= os.time()	then	updateDailyTimes() end	-- if playing past the reset time the reset time needs to be refreshed
 
 		if lootedByPlayer then	-- Player looted it, lets make a note
 
-			if dailysReset <= os.time() then	-- if playing past the reset time the reset time needs to be refreshed
-				dailysReseted = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY) - 86400	-- 24h*60min*60sec = 86400 seconds
-				dailysReset = os.time() + TIMED_ACTIVITIES_MANAGER:GetTimedActivityTypeTimeRemainingSeconds(TIMED_ACTIVITY_TYPE_DAILY)
-				todaysYear = tonumber(os.date("%Y", dailysReseted))
-				todaysDate = tonumber(os.date("%Y%m%d", dailysReseted))
-			end
-
-			if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
-				accountEventLootHistory[todaysYear] = {}	-- if not, create one
-			end
+			if not accountEventLootHistory[todaysYear] then	accountEventLootHistory[todaysYear] = {}	end	-- Initialize this years table
 			if not accountEventLootHistory[todaysYear][itemId] then	-- Does itemId have table in this years loot table
 				accountEventLootHistory[todaysYear][itemId] = {}	-- if not, create one
 				accountEventLootHistory[todaysYear][itemId][0] = 0	-- How many looted this year
@@ -517,23 +543,34 @@ end
 -- 100032	EVENT_CURRENCY_UPDATE (number eventCode, CurrencyType currencyType, CurrencyLocation currencyLocation, number newAmount, number oldAmount, currencyChangeReason reason)
 function Eventor.EVENT_CURRENCY_UPDATE (_, currencyType, currencyLocation, newAmount, oldAmount, currencyChangeReason)
 
-	-- If the currency updated was tickets and it was gained by loot or quest reward check if there is need for alert the user
+	if dailysReset <= os.time() then	updateDailyTimes() end	-- if playing past the reset time the reset time needs to be refreshed
+
+	-- If the currency updated was Event currency and it was gained by loot or quest reward check if there is need for alert the user
 	if currencyType == CURT_EVENT_TICKETS
-	and (currencyChangeReason == CURRENCY_CHANGE_REASON_LOOT or currencyChangeReason == CURRENCY_CHANGE_REASON_QUESTREWARD) 
-	and oldAmount < newAmount then
-		eventIsActive = true
+		and oldAmount < newAmount then
+			eventIsActive = true
+			currencyName = GetCurrencyName(currencyType, true, true)
+			ammountGained = newAmount - oldAmount or 300
+			if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
+				accountEventLootHistory[todaysYear] = {}	-- if not, create one
+			end
+			if not accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS] then	-- Does CURT_EVENT_TICKETS have table in this years loot table
+				accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS] = {}	-- if not, create one
+				accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][0] = ammountGained or 0	-- Initialaizing a counter for how many looted this year
+				d( ADDON .. ": creating table for " ..  currencyName )
+			else
+				accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][0] = ammountGained + (accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][0]	or 0)	-- increase this years CURT_EVENT_TICKETS counter by one
+			end
 
-		todaysDate = tonumber(os.date("%Y%m%d"))	-- maybe its a new day already, better refresh the variable
---		eventorSettings.LastEventDate = todaysDate
-
-		ticketAlert()
-
-		if not accountEventLootHistory[CURT_EVENT_TICKETS] then
-			accountEventLootHistory[CURT_EVENT_TICKETS] = {}
-		end
-
-		accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] = (newAmount - oldAmount)	-- Saves the ammount of tickets gained today
---		d( ADDON .. ": Gained " .. accountEventLootHistory[CURT_EVENT_TICKETS][todaysDate] .. " tickets")
+			if not accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate] then	-- Is this CURT_EVENT_TICKETS first entry for this todays reset?
+				accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate] = 0	-- if yes, intialize it
+				d( ADDON .. ": creating datekey " .. todaysDate .. " inside " .. currencyName  .. " table")
+			else
+				accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate] = ammountGained + (accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate]	or 0)	-- Store how much gained today
+			end
+			d( ADDON .. ": " .. accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate] .. " ".. currencyName .. " gained today (" .. accountEventLootHistory[todaysYear][3] .. " this year) because of " .. currencyChangeReason )
+			accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][-1] = os.time()	-- when the latest CURT_EVENT_TICKETS was gained this year
+			accountEventLootHistory[todaysYear][3] = ammountGained + (accountEventLootHistory[todaysYear][3] or 0)	-- Counter for much CURT_EVENT_TICKETS collected this year
 	end
 end
 
@@ -562,68 +599,12 @@ local function GiveThatSweetExpBoost( abilityId )
 end
 
 function Eventor.EVENT_PLAYER_ACTIVATED (_, shouldBeBooleanForWasItReloaduiButIsActuallyTotalyRandom)
-
-	if eventIsActive then
-		ticketAlert()
+	if eventIsActive and
+		not (accountEventLootHistory[todaysYear] and 
+			  accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS] and 
+        accountEventLootHistory[todaysYear][CURT_EVENT_TICKETS][todaysDate]) then
+		UseCollectible( 14325 )
 	end
-end
-
-activePlayerBuffs = {}
---	100034	EVENT_EFFECT_CHANGED (integer eventCode, integer changeType, integer effectSlot, string effectName, string unitTag, number beginTime, number endTime, integer stackCount, string iconName, string buffType, integer effectType, integer abilityType, integer statusEffectType, string unitName, integer unitId, integer abilityId, integer sourceUnitType)
-function Eventor.ListenToEventBuffs(eventCode, changeType, effectSlot, effectName, unitTag, beginTime, endTime, stackCount, iconName, buffType, effectType, abilityType, statusEffectType, unitName, unitId, abilityId, sourceUnitType)
-	if not EVENTEXPBUFFS[abilityId] then return end	-- Not an event buff so ending
-
---	ticketAlert()
-
-	if (beginTime + 7190 < endTime) then	-- 2h buff is 7200 seconds and logout takes 10 seconds.
-		eventorSettings.lastTimeSomeoneGainedEventBuff = os.time()
-		eventorSettings.lastEventBuffId = abilityId
---		d ( ADDON .. ": " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " was gained by " .. unitName)
-	end
-
-	if unitTag == "player"	then
-		if changeType == EFFECT_RESULT_GAINED then	-- Player got an event buff
-			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
-			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
---			d( ADDON .. ": " .. unitName .. " gained " .. zo_iconTextFormat(GetAbilityIcon(abilityId) , "100%", "100%", GetAbilityName(abilityId) ) .. " timeleft:" .. ZO_FormatTimeLargestTwo((endTime - beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
-
-		elseif changeType == EFFECT_RESULT_UPDATED then	-- Player event buff got refreshed
-			eventorSettings.whenOurEventBuffRunsOut	= os.time() + (endTime - beginTime)
-			activePlayerBuffs[abilityId] = eventorSettings.whenOurEventBuffRunsOut
-		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " was refreshed for " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL))
-		elseif changeType == EFFECT_RESULT_FADED	then	-- Player lost event buff
-			activePlayerBuffs[abilityId] = false
-			eventorSettings.whenOurEventBuffRunsOut	= os.time()
-		--	d( ADDON .. ": players " .. tostring(abilityId) .. "/" .. effectName .. " faded" )
-			GiveThatSweetExpBoost(abilityId)
-		end
-	else	-- Someone else gained an event buff
-		if (changeType == EFFECT_RESULT_GAINED or changeType == EFFECT_RESULT_UPDATED)
-		and	beginTime + 7190 < endTime	-- 2h buff is 7200 seconds and logout takes 10 seconds.
-		and	not activePlayerBuffs[abilityId] then	-- Player is missing the buff and someone else actually got a new buff.
---			d( ADDON .. ": " .. ZO_LinkHandler_CreateLinkWithoutBrackets(unitName, nil, CHARACTER_LINK_TYPE, unitName) ..  tostring(abilityId) .. "/" .. effectName .. " gained(1) or updated(3) =" .. changeType .. " timeleft: " .. ZO_FormatTimeLargestTwo((endTime-beginTime), TIME_FORMAT_STYLE_DESCRIPTIVE_MINIMAL) )
-			GiveThatSweetExpBoost(abilityId)
-		end
-	end
-end
-
--- Lets fire up the add-on by registering for events and loading variables
-function Eventor.Initialize()
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
-
-  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	or {}-- Load event loot history
-	if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
-		accountEventLootHistory[todaysYear] = {}	-- if not, create one
-	end
-	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	or eventorSettings -- Load settings
-
---	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
-
---	if eventorSettings.keepEventBuffsOn then
-	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_EFFECT_CHANGED, Eventor.ListenToEventBuffs)
---	end
 end
 
 -- LAM stuff
@@ -658,6 +639,22 @@ local optionsData = {
 	},
 }
 LAM:RegisterOptionControls(panelName, optionsData)
+
+-- Lets fire up the add-on by registering for events and loading variables
+function Eventor.Initialize()
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_LOOT_RECEIVED, Eventor.lootedEventBox)	-- Start listening to gained loot
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_CURRENCY_UPDATE, Eventor.EVENT_CURRENCY_UPDATE)	-- Start listening to gained tickets
+	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_PLAYER_ACTIVATED, Eventor.EVENT_PLAYER_ACTIVATED)
+
+  accountEventLootHistory   = ZO_SavedVars:NewAccountWide("Eventor_accountEventLootHistory", 1, nil, {}, GetWorldName() )	or {}-- Load event loot history
+	if not accountEventLootHistory[todaysYear] then	-- Does this year have a table
+		accountEventLootHistory[todaysYear] = {}	-- if not, create one
+	end
+	eventorSettings   = ZO_SavedVars:NewAccountWide("Eventor_eventorSettings", 1, nil, {}, GetWorldName() )	or eventorSettings -- Load settings
+
+--	EVENT_MANAGER:RegisterForEvent(ADDON, EVENT_QUEST_ADVANCED,	Quests.EVENT_QUEST_ADVANCED)
+end
+
 
 -- Here the magic starts
 function Eventor.EVENT_ADD_ON_LOADED(_, loadedAddOnName)
